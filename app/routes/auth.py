@@ -1,8 +1,11 @@
 """GitHub OAuth authentication routes."""
+import os
+# Allow OAuth scope changes (GitHub returns comma-separated, we send space-separated)
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+
 from flask import Blueprint, redirect, url_for, request, session, flash, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from requests_oauthlib import OAuth2Session
-import os
 
 from app.models.user import User
 
