@@ -22,18 +22,12 @@ class ComponentService:
         self._cache = {}
         self._cache_time = None
 
-    def _get_github_service(self, for_write: bool = False) -> GitHubService:
+    def _get_github_service(self) -> GitHubService:
         """Get GitHub service instance.
 
-        Args:
-            for_write: If True, use the bot token for write operations
+        Always uses the bot token to avoid rate limits (60/hr unauthenticated vs 5000/hr authenticated).
         """
-        token = None
-        if for_write:
-            # Use bot token for writing to the central repo
-            token = current_app.config.get('GITHUB_BOT_TOKEN')
-            if not token:
-                raise ValueError("GITHUB_BOT_TOKEN not configured - cannot write components")
+        token = current_app.config.get('GITHUB_BOT_TOKEN')
         return GitHubService(token)
 
     def search_components(
@@ -214,11 +208,13 @@ class ComponentService:
 
     def _save_to_github(self, component: Component, user):
         """Save component to GitHub repository using the bot token."""
-        github = self._get_github_service(for_write=True)
+        github = self._get_github_service()
 
-        # Check if component already exists (use read-only service)
-        read_github = self._get_github_service(for_write=False)
-        existing = read_github.get_component(component.id)
+        if not current_app.config.get('GITHUB_BOT_TOKEN'):
+            raise ValueError("GITHUB_BOT_TOKEN not configured - cannot write components")
+
+        # Check if component already exists
+        existing = github.get_component(component.id)
         existing_sha = existing['sha'] if existing else None
 
         # Use the submitting user's info for the commit attribution
