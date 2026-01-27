@@ -1,0 +1,76 @@
+{
+  "id": "pir-motion-sensor",
+  "name": "HC-SR501 PIR Motion Sensor",
+  "manufacturer": "Generic",
+  "category": "sensors",
+  "description": "Passive infrared motion detector module with adjustable sensitivity and delay",
+  "dimensions": {
+    "length_mm": 32.0,
+    "width_mm": 24.0,
+    "height_mm": 24.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B07KBWVJMP",
+    "aliexpress": "HC-SR501"
+  },
+  "features": [
+    {
+      "feature_type": "sensor_window",
+      "name": "PIR Fresnel Lens",
+      "description": "Dome-shaped Fresnel lens - needs clear view for motion detection",
+      "position_x_mm": 3.5,
+      "position_y_mm": 0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 25.0,
+      "hole_height_mm": 25.0,
+      "is_circular": true,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "potentiometer",
+      "name": "Sensitivity Adjust",
+      "description": "Potentiometer to adjust detection sensitivity",
+      "position_x_mm": 8.0,
+      "position_y_mm": 20.0,
+      "position_z_mm": 24.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "potentiometer",
+      "name": "Time Delay Adjust",
+      "description": "Potentiometer to adjust output hold time",
+      "position_x_mm": 24.0,
+      "position_y_mm": 20.0,
+      "position_z_mm": 24.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 3.0, "y": 3.0, "diameter": 2.0},
+      {"x": 29.0, "y": 3.0, "diameter": 2.0}
+    ]
+  },
+  "keepouts": [
+    {
+      "type": "sensor_field",
+      "position": {"x": 0, "y": 0},
+      "size": {"length": 32, "width": 24},
+      "description": "120 degree detection cone in front of sensor"
+    }
+  ],
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

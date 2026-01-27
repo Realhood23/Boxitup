@@ -1,0 +1,110 @@
+{
+  "id": "raspberry-pi-pico",
+  "name": "Raspberry Pi Pico",
+  "manufacturer": "Raspberry Pi Foundation",
+  "category": "microcontrollers",
+  "description": "RP2040 dual-core ARM Cortex-M0+ microcontroller board",
+  "dimensions": {
+    "length_mm": 51.0,
+    "width_mm": 21.0,
+    "height_mm": 3.9,
+    "tolerance_mm": 0.2
+  },
+  "distributors": {
+    "digikey": "2648-SC0915CT-ND",
+    "mouser": "358-SC0915"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "Micro USB Port",
+      "description": "Programming, power, and USB device functionality",
+      "position_x_mm": 25.5,
+      "position_y_mm": 0,
+      "position_z_mm": 1.0,
+      "hole_width_mm": 8.5,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "BOOTSEL Button",
+      "description": "Hold while plugging USB to enter bootloader",
+      "position_x_mm": 15.0,
+      "position_y_mm": 10.5,
+      "position_z_mm": 3.9,
+      "hole_width_mm": 5.0,
+      "hole_height_mm": 5.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Onboard LED",
+      "description": "Green LED connected to GP25",
+      "position_x_mm": 6.0,
+      "position_y_mm": 10.5,
+      "position_z_mm": 2.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Left GPIO Header",
+      "description": "20-pin header for GPIO",
+      "position_x_mm": 0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 3.9,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 48.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Right GPIO Header",
+      "description": "20-pin header for GPIO",
+      "position_x_mm": 18.0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 3.9,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 48.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "debug_port",
+      "name": "SWD Debug Header",
+      "description": "3-pin SWD debug header",
+      "position_x_mm": 25.5,
+      "position_y_mm": 48.0,
+      "position_z_mm": 3.9,
+      "hole_width_mm": 8.0,
+      "hole_height_mm": 3.0,
+      "is_circular": false,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.0, "y": 11.4, "diameter": 2.1},
+      {"x": 49.0, "y": 11.4, "diameter": 2.1},
+      {"x": 2.0, "y": 2.0, "diameter": 2.1},
+      {"x": 49.0, "y": 2.0, "diameter": 2.1}
+    ]
+  },
+  "datasheet_url": "https://datasheets.raspberrypi.com/pico/pico-datasheet.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

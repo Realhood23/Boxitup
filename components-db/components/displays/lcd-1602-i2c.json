@@ -1,0 +1,58 @@
+{
+  "id": "lcd-1602-i2c",
+  "name": "LCD 16x2 with I2C Backpack",
+  "manufacturer": "Generic",
+  "category": "displays",
+  "description": "16 character x 2 line LCD display with I2C interface module (PCF8574)",
+  "dimensions": {
+    "length_mm": 80.0,
+    "width_mm": 36.0,
+    "height_mm": 12.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B07S7PJYM6",
+    "aliexpress": "LCD1602-I2C"
+  },
+  "features": [
+    {
+      "feature_type": "display",
+      "name": "LCD Screen",
+      "description": "16x2 character LCD display with backlight",
+      "position_x_mm": 4.5,
+      "position_y_mm": 6.0,
+      "position_z_mm": 7.0,
+      "hole_width_mm": 71.0,
+      "hole_height_mm": 24.0,
+      "is_circular": false,
+      "corner_radius_mm": 0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "potentiometer",
+      "name": "Contrast Adjust",
+      "description": "Potentiometer to adjust display contrast",
+      "position_x_mm": 72.0,
+      "position_y_mm": 30.0,
+      "position_z_mm": 12.0,
+      "hole_width_mm": 5.0,
+      "hole_height_mm": 5.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.5, "y": 2.5, "diameter": 3.0},
+      {"x": 77.5, "y": 2.5, "diameter": 3.0},
+      {"x": 2.5, "y": 33.5, "diameter": 3.0},
+      {"x": 77.5, "y": 33.5, "diameter": 3.0}
+    ]
+  },
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

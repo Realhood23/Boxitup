@@ -1,0 +1,125 @@
+{
+  "id": "esp32-wroom-32",
+  "name": "ESP32-WROOM-32 DevKit",
+  "manufacturer": "Espressif",
+  "category": "microcontrollers",
+  "description": "Wi-Fi & Bluetooth MCU development board with USB programming",
+  "dimensions": {
+    "length_mm": 51.0,
+    "width_mm": 25.5,
+    "height_mm": 8.0,
+    "tolerance_mm": 0.3
+  },
+  "distributors": {
+    "digikey": "1965-ESP32-DEVKITC-32D-ND",
+    "mouser": "356-ESP32-DEVKITC-32D",
+    "amazon": "B0718T232Z"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "Micro USB Port",
+      "description": "Programming and power via Micro USB",
+      "position_x_mm": 25.5,
+      "position_y_mm": 0,
+      "position_z_mm": 2.0,
+      "hole_width_mm": 8.5,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "EN/Reset Button",
+      "description": "Reset the ESP32",
+      "position_x_mm": 5.0,
+      "position_y_mm": 3.0,
+      "position_z_mm": 8.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "BOOT Button",
+      "description": "Enter bootloader mode",
+      "position_x_mm": 5.0,
+      "position_y_mm": 22.5,
+      "position_z_mm": 8.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Power LED",
+      "description": "Red power indicator LED",
+      "position_x_mm": 48.0,
+      "position_y_mm": 12.75,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "antenna",
+      "name": "PCB Antenna",
+      "description": "Built-in PCB antenna - keep metal away",
+      "position_x_mm": 40.0,
+      "position_y_mm": 5.0,
+      "position_z_mm": 0,
+      "hole_width_mm": 10.0,
+      "hole_height_mm": 15.0,
+      "required_face": "any",
+      "requires_external_access": false
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Left GPIO Header",
+      "description": "19-pin header for GPIO access",
+      "position_x_mm": 0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 8.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 48.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Right GPIO Header",
+      "description": "19-pin header for GPIO access",
+      "position_x_mm": 22.5,
+      "position_y_mm": 1.27,
+      "position_z_mm": 8.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 48.0,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": []
+  },
+  "keepouts": [
+    {
+      "type": "antenna",
+      "position": {"x": 40, "y": 5},
+      "size": {"length": 10, "width": 15},
+      "description": "Keep metal away from antenna area for best WiFi/BT performance"
+    }
+  ],
+  "datasheet_url": "https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

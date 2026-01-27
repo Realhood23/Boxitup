@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Generate OpenSCAD - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <a href="{{ url_for('projects.edit', project_id=project.id) }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+            &larr; Back to Editor
+        </a>
+        <h1 style="margin-top: 0.5rem;">Generate OpenSCAD Script</h1>
+        <p>{{ project.name }}</p>
+    </div>
+
+    {% if not is_valid %}
+    <div class="alert alert-error">
+        <strong>Cannot generate script yet.</strong> Please fix the following issues:
+        <ul style="margin: 0.5rem 0 0 1.5rem;">
+            {% for issue in issues %}
+            <li>{{ issue }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('projects.edit', project_id=project.id) }}" class="btn btn-outline" style="margin-top: 0.75rem;">
+            Return to Editor
+        </a>
+    </div>
+    {% else %}
+
+    <div class="grid grid-2" style="gap: 1.5rem;">
+        <!-- Left: Summary -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Project Summary</h2>
+                </div>
+
+                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Components</h4>
+                <ul style="margin-bottom: 1rem;">
+                    {% for comp in project.components %}
+                    <li style="margin-bottom: 0.25rem;">
+                        <strong>{{ comp.component_name }}</strong>
+                        <span style="color: var(--text-muted);">
+                            at ({{ comp.position.x_mm }}, {{ comp.position.y_mm }}) mm
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                {% if project.enclosure_config %}
+                <h4 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Enclosure</h4>
+                <table class="table">
+                    <tr>
+                        <td>Inner Dimensions</td>
+                        <td>{{ project.enclosure_config.dimensions.inner_length_mm }} x
+                            {{ project.enclosure_config.dimensions.inner_width_mm }} x
+                            {{ project.enclosure_config.dimensions.inner_height_mm }} mm</td>
+                    </tr>
+                    <tr>
+                        <td>Wall Thickness</td>
+                        <td>{{ project.enclosure_config.wall_thickness_mm }} mm</td>
+                    </tr>
+                    <tr>
+                        <td>Shape</td>
+                        <td>{{ project.enclosure_config.shape|replace('_', ' ')|title }}</td>
+                    </tr>
+                    <tr>
+                        <td>Lid Type</td>
+                        <td>{{ project.enclosure_config.lid.type|replace('_', ' ')|title }}</td>
+                    </tr>
+                    <tr>
+                        <td>Holes</td>
+                        <td>{{ project.enclosure_config.holes|length }} cutout(s)</td>
+                    </tr>
+                </table>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Download Options</h2>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <a href="{{ url_for('generator.download', project_id=project.id) }}" class="btn btn-primary btn-lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Complete Enclosure (.scad)
+                    </a>
+
+                    {% if project.enclosure_config and project.enclosure_config.lid.type != 'none' %}
+                    <a href="{{ url_for('generator.download_lid', project_id=project.id) }}" class="btn btn-outline">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Lid Only (.scad)
+                    </a>
+                    {% endif %}
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem;">
+                    Open the downloaded file in <a href="https://openscad.org/" target="_blank">OpenSCAD</a>
+                    to preview, customize, and export as STL for 3D printing.
+                </p>
+            </div>
+
+            <div class="card" style="background: var(--bg);">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Printing Tips</h3>
+                <ul style="font-size: 0.875rem; color: var(--text-muted); margin-left: 1.25rem;">
+                    <li>Suggested layer height: 0.2mm</li>
+                    <li>Suggested infill: 20%</li>
+                    <li>Print body and lid separately for best results</li>
+                    <li>No supports needed for standard orientations</li>
+                    <li>Use PETG or ABS for heat-generating electronics</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right: Code Preview -->
+        <div>
+            <div class="card" style="height: 100%;">
+                <div class="card-header flex justify-between items-center">
+                    <h2 class="card-title">Script Preview</h2>
+                    <button class="btn btn-sm btn-outline" onclick="copyScript()">
+                        Copy to Clipboard
+                    </button>
+                </div>
+
+                <div id="script-preview" style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.25rem; overflow: auto; max-height: 600px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.75rem; line-height: 1.5;">
+                    <div class="spinner" style="margin: 2rem auto;"></div>
+                    <p style="text-align: center; color: #888;">Loading script preview...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const preview = document.getElementById('script-preview');
+    if (!preview) return;
+
+    try {
+        const response = await fetch('/generator/api/{{ project.id }}/script');
+        if (response.ok) {
+            const data = await response.json();
+            preview.innerHTML = '<pre style="margin: 0; white-space: pre-wrap;">' +
+                escapeHtml(data.script) + '</pre>';
+        } else {
+            const error = await response.json();
+            preview.innerHTML = '<p style="color: #ff6b6b;">Error: ' + escapeHtml(error.error) + '</p>';
+        }
+    } catch (e) {
+        preview.innerHTML = '<p style="color: #ff6b6b;">Failed to load preview</p>';
+    }
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function copyScript() {
+    const preview = document.getElementById('script-preview');
+    const pre = preview.querySelector('pre');
+    if (pre) {
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+            alert('Script copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

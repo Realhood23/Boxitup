@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    <div class="page-header">
+        <h1>Documentation</h1>
+        <p>Learn how to use the Enclosure Generator</p>
+    </div>
+
+    <div class="grid grid-2" style="gap: 1.5rem;">
+        <!-- Table of Contents -->
+        <div>
+            <div class="card" style="position: sticky; top: 80px;">
+                <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Contents</h3>
+                <ul style="list-style: none; font-size: 0.875rem;">
+                    <li style="margin-bottom: 0.5rem;"><a href="#getting-started">Getting Started</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#adding-components">Adding Components</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#feature-toggles">Feature Toggles</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#placing-holes">Placing Holes</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#enclosure-settings">Enclosure Settings</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#generating-script">Generating the Script</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#openscad-tips">OpenSCAD Tips</a></li>
+                    <li style="margin-bottom: 0.5rem;"><a href="#contributing-components">Contributing Components</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div>
+            <div class="card" id="getting-started">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Getting Started</h2>
+                <ol style="margin-left: 1.5rem;">
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Sign in with GitHub</strong> - Click the "Sign in with GitHub" button
+                        to authenticate. This allows you to create projects and add components to the database.
+                    </li>
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Create a project</strong> - Go to "My Projects" and click "New Project".
+                        Give your project a descriptive name.
+                    </li>
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Add components</strong> - In the project editor, switch to the "Add from Library"
+                        tab and click on components to add them.
+                    </li>
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Configure features</strong> - Toggle which features need access holes.
+                    </li>
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Place holes</strong> - For each enabled feature, place a hole on the
+                        appropriate enclosure face.
+                    </li>
+                    <li style="margin-bottom: 0.75rem;">
+                        <strong>Generate</strong> - Once all holes are placed, generate and download
+                        your OpenSCAD script.
+                    </li>
+                </ol>
+            </div>
+
+            <div class="card" id="adding-components">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Adding Components to a Project</h2>
+                <p style="margin-bottom: 1rem;">
+                    In the project editor, the left panel has two tabs:
+                </p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li><strong>Project Components</strong> - Shows components already in your project</li>
+                    <li><strong>Add from Library</strong> - Browse and search available components</li>
+                </ul>
+                <p style="margin-bottom: 1rem;">
+                    Click on a component in the library to add it to your project. It will appear
+                    in the canvas and in the Project Components list.
+                </p>
+                <p>
+                    <strong>Tip:</strong> You can add the same component multiple times if your
+                    project needs multiple instances (e.g., two ESP32 boards).
+                </p>
+            </div>
+
+            <div class="card" id="feature-toggles">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Feature Toggles</h2>
+                <p style="margin-bottom: 1rem;">
+                    Each component has a list of "features" - ports, buttons, LEDs, and other
+                    elements that might need access holes in your enclosure. In the right panel,
+                    select a component to see its features.
+                </p>
+                <p style="margin-bottom: 1rem;">
+                    <strong>Toggle on</strong> features that need external access. For example:
+                </p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>USB port for power/programming: ON</li>
+                    <li>Reset button for debugging: ON or OFF depending on your needs</li>
+                    <li>Status LED: ON if you want to see it, OFF if not</li>
+                    <li>GPIO header: ON only if you need to connect wires</li>
+                </ul>
+                <p>
+                    Features that are toggled ON will show a warning badge until you place
+                    their corresponding hole.
+                </p>
+            </div>
+
+            <div class="card" id="placing-holes">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Placing Holes</h2>
+                <p style="margin-bottom: 1rem;">
+                    For each enabled feature, you need to place a hole on one of the enclosure faces:
+                </p>
+                <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Click "Place Hole" next to the feature</li>
+                    <li>Select which face (front, back, left, right, top, bottom)</li>
+                    <li>Set the X and Y position on that face</li>
+                    <li>Adjust the hole size if needed</li>
+                    <li>Click "Place Hole" to confirm</li>
+                </ol>
+                <p style="margin-bottom: 1rem;">
+                    <strong>Auto-Suggest:</strong> Click the "Auto-Suggest Holes" button to get
+                    recommended placements based on component positions and feature locations.
+                </p>
+                <p>
+                    You can also add custom holes (for ventilation, cable entry, etc.) from the
+                    Holes tab in the right panel.
+                </p>
+            </div>
+
+            <div class="card" id="enclosure-settings">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Enclosure Settings</h2>
+                <p style="margin-bottom: 1rem;">
+                    In the "Enclosure" tab of the right panel, configure:
+                </p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li><strong>Dimensions</strong> - Inner length, width, and height in mm</li>
+                    <li><strong>Wall thickness</strong> - Typically 2mm for strength</li>
+                    <li><strong>Corner radius</strong> - Set to 0 for sharp corners, or higher for rounded</li>
+                    <li><strong>Shape</strong> - Box, rounded box, cylinder, or hexagon</li>
+                    <li><strong>Lid type</strong> - Snap fit, screw mount, sliding, or press fit</li>
+                </ul>
+                <p>
+                    Use the "Auto-Size to Components" button to automatically calculate
+                    the minimum enclosure size for your components with padding.
+                </p>
+            </div>
+
+            <div class="card" id="generating-script">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Generating the Script</h2>
+                <p style="margin-bottom: 1rem;">
+                    Once all enabled features have holes placed, the "Generate OpenSCAD" button
+                    becomes active. Click it to go to the preview page where you can:
+                </p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Review the project summary</li>
+                    <li>Preview the generated code</li>
+                    <li>Download the complete enclosure script</li>
+                    <li>Download just the lid (if applicable)</li>
+                </ul>
+                <p>
+                    The downloaded <code>.scad</code> file can be opened in OpenSCAD for
+                    further customization and STL export.
+                </p>
+            </div>
+
+            <div class="card" id="openscad-tips">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">OpenSCAD Tips</h2>
+                <p style="margin-bottom: 1rem;">
+                    <a href="https://openscad.org/" target="_blank">Download OpenSCAD</a> (free, open-source)
+                </p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Press <strong>F5</strong> for quick preview</li>
+                    <li>Press <strong>F6</strong> for full render (required before export)</li>
+                    <li>Use <strong>View > Customizer</strong> to adjust parameters with sliders</li>
+                    <li>To export: File > Export > Export as STL</li>
+                </ul>
+                <p style="margin-bottom: 1rem;">
+                    <strong>Printing body and lid separately:</strong>
+                </p>
+                <ol style="margin-left: 1.5rem;">
+                    <li>Comment out the <code>lid();</code> line</li>
+                    <li>Render and export body STL</li>
+                    <li>Uncomment <code>lid();</code> and comment out <code>body();</code></li>
+                    <li>Render and export lid STL</li>
+                </ol>
+            </div>
+
+            <div class="card" id="contributing-components">
+                <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Contributing Components</h2>
+                <p style="margin-bottom: 1rem;">
+                    Don't see a component you need? You can add it to the database:
+                </p>
+                <ol style="margin-left: 1.5rem; margin-bottom: 1rem;">
+                    <li>Go to Components > Add Component</li>
+                    <li>Either paste a DigiKey/Mouser URL for auto-import, or enter details manually</li>
+                    <li>Measure the component carefully with calipers</li>
+                    <li>Add all ports, buttons, LEDs as features with their positions and hole sizes</li>
+                    <li>Submit - the component will be committed to GitHub under your username</li>
+                </ol>
+                <p>
+                    Please double-check measurements before submitting. Inaccurate dimensions
+                    lead to enclosures that don't fit!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% for component in components %}
+<div class="component-card" onclick="window.location='{{ url_for('components.detail', component_id=component.id) }}'">
+    <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+        <h3>{{ component.name }}</h3>
+        {% if component.verified %}
+        <span class="badge badge-success" title="Verified dimensions">Verified</span>
+        {% endif %}
+    </div>
+    <span class="manufacturer">{{ component.manufacturer }}</span>
+    <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.5rem 0;">
+        {{ component.description[:80] }}{% if component.description|length > 80 %}...{% endif %}
+    </p>
+    <p class="dimensions">
+        {{ component.length_mm }} x {{ component.width_mm }} x {{ component.height_mm }} mm
+    </p>
+    <div style="margin-top: 0.75rem;">
+        {% for feature in component.features[:4] %}
+        <span class="badge badge-primary" style="margin-right: 0.25rem; margin-bottom: 0.25rem;">
+            {{ feature.name }}
+        </span>
+        {% endfor %}
+        {% if component.features|length > 4 %}
+        <span class="badge badge-secondary">+{{ component.features|length - 4 }} more</span>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+    <p style="color: var(--text-muted);">No components found matching your search.</p>
+</div>
+{% endfor %}

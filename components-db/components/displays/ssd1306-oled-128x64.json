@@ -1,0 +1,46 @@
+{
+  "id": "ssd1306-oled-128x64",
+  "name": "SSD1306 OLED Display 0.96\" 128x64",
+  "manufacturer": "Generic",
+  "category": "displays",
+  "description": "0.96 inch I2C OLED display module, 128x64 pixels, white/blue/yellow-blue",
+  "dimensions": {
+    "length_mm": 27.3,
+    "width_mm": 27.8,
+    "height_mm": 4.3,
+    "tolerance_mm": 0.3
+  },
+  "distributors": {
+    "amazon": "B08CDN5PSJ",
+    "aliexpress": "SSD1306-OLED"
+  },
+  "features": [
+    {
+      "feature_type": "display",
+      "name": "OLED Screen",
+      "description": "0.96\" 128x64 OLED display panel",
+      "position_x_mm": 1.65,
+      "position_y_mm": 7.0,
+      "position_z_mm": 2.0,
+      "hole_width_mm": 24.0,
+      "hole_height_mm": 13.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.0, "y": 2.0, "diameter": 2.0},
+      {"x": 25.3, "y": 2.0, "diameter": 2.0},
+      {"x": 2.0, "y": 25.8, "diameter": 2.0},
+      {"x": 25.3, "y": 25.8, "diameter": 2.0}
+    ]
+  },
+  "datasheet_url": "https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

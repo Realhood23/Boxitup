@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}About - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div class="page-header">
+        <h1>About Enclosure Generator</h1>
+        <p>Create custom 3D printable enclosures for your electronics projects</p>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">What is this?</h2>
+        <p style="margin-bottom: 1rem;">
+            Enclosure Generator is a web application that helps makers, hobbyists, and engineers
+            design custom 3D printable enclosures for their electronics projects. Instead of
+            manually measuring components and modeling boxes in CAD software, you can:
+        </p>
+        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+            <li>Select pre-measured components from our database</li>
+            <li>Toggle which ports and connectors need access holes</li>
+            <li>Visually place components and holes</li>
+            <li>Generate parametric OpenSCAD scripts automatically</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">How it works</h2>
+
+        <h3 style="font-size: 1rem; margin: 1rem 0 0.5rem;">1. Component Database</h3>
+        <p style="margin-bottom: 1rem;">
+            Our component database is stored on GitHub and contains pre-measured dimensions
+            for popular electronics like ESP32, Raspberry Pi, Arduino, displays, and sensors.
+            Each component includes information about its ports, buttons, LEDs, and other
+            features that might need access holes.
+        </p>
+
+        <h3 style="font-size: 1rem; margin: 1rem 0 0.5rem;">2. Feature Toggles</h3>
+        <p style="margin-bottom: 1rem;">
+            When you add a component to your project, you can toggle which features need
+            access holes. Don't need the GPIO header exposed? Turn it off. Need USB power
+            but not the SD card? Toggle accordingly. This ensures your enclosure only has
+            the holes you actually need.
+        </p>
+
+        <h3 style="font-size: 1rem; margin: 1rem 0 0.5rem;">3. Visual Editor</h3>
+        <p style="margin-bottom: 1rem;">
+            Position your components in a visual 2D editor. Place holes on the enclosure
+            faces exactly where you need them. The system tracks which features still need
+            holes and won't let you generate the script until everything is placed.
+        </p>
+
+        <h3 style="font-size: 1rem; margin: 1rem 0 0.5rem;">4. OpenSCAD Output</h3>
+        <p style="margin-bottom: 1rem;">
+            The generator creates a parametric OpenSCAD script with clear comments and
+            customizable variables. You can further tweak the design in OpenSCAD before
+            exporting to STL for 3D printing.
+        </p>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Contributing</h2>
+        <p style="margin-bottom: 1rem;">
+            This is an open-source project! You can contribute by:
+        </p>
+        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+            <li><strong>Adding components:</strong> Sign in with GitHub and add new components with accurate measurements</li>
+            <li><strong>Verifying dimensions:</strong> Help verify component measurements submitted by others</li>
+            <li><strong>Reporting issues:</strong> Found a bug or have a feature request? Open an issue on GitHub</li>
+            <li><strong>Contributing code:</strong> The application is open source - pull requests welcome!</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Technology</h2>
+        <p style="margin-bottom: 0.5rem;">Built with:</p>
+        <ul style="margin-left: 1.5rem;">
+            <li>Python / Flask</li>
+            <li>HTMX + Alpine.js for interactive UI</li>
+            <li>GitHub API for component database storage</li>
+            <li>Nexar/Octopart API for component data import</li>
+            <li>OpenSCAD for 3D modeling</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

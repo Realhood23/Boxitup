@@ -1,0 +1,40 @@
+{
+  "id": "18650-battery-holder-single",
+  "name": "18650 Battery Holder (Single Cell)",
+  "manufacturer": "Generic",
+  "category": "power",
+  "description": "Single 18650 lithium battery holder with wire leads",
+  "dimensions": {
+    "length_mm": 77.0,
+    "width_mm": 21.0,
+    "height_mm": 20.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B07CWKZ95J",
+    "aliexpress": "18650-holder"
+  },
+  "features": [
+    {
+      "feature_type": "cable_entry",
+      "name": "Power Wires",
+      "description": "Wire leads for power connection",
+      "position_x_mm": 38.5,
+      "position_y_mm": 0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 6.0,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "front",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "adhesive",
+    "holes": []
+  },
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

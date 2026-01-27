@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="page-header">
+        <h1>Your Profile</h1>
+    </div>
+
+    <div class="card">
+        <div class="flex items-center gap-4" style="margin-bottom: 1.5rem;">
+            <img src="{{ current_user.avatar_url }}" alt="{{ current_user.username }}"
+                 style="width: 80px; height: 80px; border-radius: 50%;">
+            <div>
+                <h2 style="margin-bottom: 0.25rem;">{{ current_user.name or current_user.username }}</h2>
+                <p style="color: var(--text-muted);">@{{ current_user.username }}</p>
+                {% if current_user.email %}
+                <p style="font-size: 0.875rem; color: var(--text-muted);">{{ current_user.email }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                Signed in via GitHub
+            </p>
+            <a href="https://github.com/{{ current_user.username }}" target="_blank" class="btn btn-outline btn-sm">
+                View GitHub Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3 style="font-size: 1rem; margin-bottom: 1rem;">Your Activity</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+            Components and projects you've contributed will appear here.
+        </p>
+    </div>
+
+    <div class="card" style="background: #fee2e2;">
+        <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: #991b1b;">Sign Out</h3>
+        <p style="font-size: 0.875rem; color: #991b1b; margin-bottom: 1rem;">
+            This will sign you out of the Enclosure Generator.
+        </p>
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Sign Out</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{
+  "id": "arduino-nano",
+  "name": "Arduino Nano",
+  "manufacturer": "Arduino",
+  "category": "microcontrollers",
+  "description": "Compact ATmega328P development board with Mini-B USB",
+  "dimensions": {
+    "length_mm": 45.0,
+    "width_mm": 18.0,
+    "height_mm": 5.0,
+    "tolerance_mm": 0.3
+  },
+  "distributors": {
+    "digikey": "1050-1001-ND",
+    "mouser": "782-A000005",
+    "amazon": "B0713XK923"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "Mini USB Port",
+      "description": "Programming and power via Mini USB-B",
+      "position_x_mm": 22.5,
+      "position_y_mm": 0,
+      "position_z_mm": 1.0,
+      "hole_width_mm": 8.0,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "Reset Button",
+      "description": "Reset the Arduino",
+      "position_x_mm": 38.0,
+      "position_y_mm": 9.0,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Power LED",
+      "description": "Green power indicator",
+      "position_x_mm": 3.0,
+      "position_y_mm": 14.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 2.5,
+      "hole_height_mm": 2.5,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "TX LED",
+      "description": "Transmit indicator LED",
+      "position_x_mm": 6.0,
+      "position_y_mm": 14.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 2.5,
+      "hole_height_mm": 2.5,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "RX LED",
+      "description": "Receive indicator LED",
+      "position_x_mm": 9.0,
+      "position_y_mm": 14.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 2.5,
+      "hole_height_mm": 2.5,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "L LED (Pin 13)",
+      "description": "User LED on digital pin 13",
+      "position_x_mm": 12.0,
+      "position_y_mm": 14.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 2.5,
+      "hole_height_mm": 2.5,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Left Header",
+      "description": "15-pin header (D13-D2, RST, GND)",
+      "position_x_mm": 0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 42.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Right Header",
+      "description": "15-pin header (TX0, RX1, A0-A7, AREF, 3V3)",
+      "position_x_mm": 15.0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 42.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "ICSP Header",
+      "description": "6-pin ICSP programming header",
+      "position_x_mm": 30.0,
+      "position_y_mm": 6.0,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 5.0,
+      "hole_height_mm": 8.0,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "none",
+    "holes": []
+  },
+  "datasheet_url": "https://docs.arduino.cc/hardware/nano",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

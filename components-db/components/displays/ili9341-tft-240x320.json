@@ -1,0 +1,59 @@
+{
+  "id": "ili9341-tft-240x320",
+  "name": "ILI9341 TFT Display 2.8\" 240x320",
+  "manufacturer": "Generic",
+  "category": "displays",
+  "description": "2.8 inch TFT LCD color display with touch screen, SPI interface",
+  "dimensions": {
+    "length_mm": 77.0,
+    "width_mm": 50.0,
+    "height_mm": 8.5,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B07P9X3L7M",
+    "aliexpress": "ILI9341-TFT"
+  },
+  "features": [
+    {
+      "feature_type": "display",
+      "name": "TFT LCD Screen",
+      "description": "2.8\" 240x320 color TFT with resistive touch",
+      "position_x_mm": 5.0,
+      "position_y_mm": 7.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 67.0,
+      "hole_height_mm": 36.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "sd_card_slot",
+      "name": "SD Card Slot",
+      "description": "MicroSD card slot for storing images/data",
+      "position_x_mm": 77.0,
+      "position_y_mm": 20.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 14.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "right",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.5, "y": 2.5, "diameter": 3.0},
+      {"x": 74.5, "y": 2.5, "diameter": 3.0},
+      {"x": 2.5, "y": 47.5, "diameter": 3.0},
+      {"x": 74.5, "y": 47.5, "diameter": 3.0}
+    ]
+  },
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

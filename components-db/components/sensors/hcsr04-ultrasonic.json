@@ -1,0 +1,53 @@
+{
+  "id": "hcsr04-ultrasonic",
+  "name": "HC-SR04 Ultrasonic Distance Sensor",
+  "manufacturer": "Generic",
+  "category": "sensors",
+  "description": "Ultrasonic distance measuring module, 2cm-400cm range",
+  "dimensions": {
+    "length_mm": 45.0,
+    "width_mm": 20.0,
+    "height_mm": 15.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B07RGB4W8V",
+    "aliexpress": "HC-SR04"
+  },
+  "features": [
+    {
+      "feature_type": "sensor_window",
+      "name": "Ultrasonic Transducers",
+      "description": "TX and RX ultrasonic transducers - need clear line of sight",
+      "position_x_mm": 3.5,
+      "position_y_mm": 2.5,
+      "position_z_mm": 0,
+      "hole_width_mm": 38.0,
+      "hole_height_mm": 16.0,
+      "is_circular": false,
+      "corner_radius_mm": 8.0,
+      "required_face": "front",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.0, "y": 2.0, "diameter": 2.0},
+      {"x": 43.0, "y": 2.0, "diameter": 2.0},
+      {"x": 2.0, "y": 18.0, "diameter": 2.0},
+      {"x": 43.0, "y": 18.0, "diameter": 2.0}
+    ]
+  },
+  "keepouts": [
+    {
+      "type": "sensor_field",
+      "position": {"x": 0, "y": 0},
+      "size": {"length": 45, "width": 20},
+      "description": "Clear path needed in front of sensors for measurements"
+    }
+  ],
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

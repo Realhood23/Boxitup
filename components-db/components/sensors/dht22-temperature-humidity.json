@@ -1,0 +1,50 @@
+{
+  "id": "dht22-temperature-humidity",
+  "name": "DHT22 Temperature & Humidity Sensor",
+  "manufacturer": "Aosong",
+  "category": "sensors",
+  "description": "Digital temperature and humidity sensor with single-wire interface",
+  "dimensions": {
+    "length_mm": 25.0,
+    "width_mm": 15.0,
+    "height_mm": 7.7,
+    "tolerance_mm": 0.3
+  },
+  "distributors": {
+    "digikey": "1568-DHT22-ND",
+    "mouser": "485-385",
+    "amazon": "B0795F19W6"
+  },
+  "features": [
+    {
+      "feature_type": "sensor_window",
+      "name": "Sensor Grille",
+      "description": "Ventilation slots for humidity sensing - needs airflow",
+      "position_x_mm": 5.0,
+      "position_y_mm": 5.0,
+      "position_z_mm": 7.7,
+      "hole_width_mm": 15.0,
+      "hole_height_mm": 5.0,
+      "is_circular": false,
+      "corner_radius_mm": 0,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "adhesive",
+    "holes": []
+  },
+  "keepouts": [
+    {
+      "type": "airflow",
+      "position": {"x": 0, "y": 0},
+      "size": {"length": 25, "width": 15},
+      "description": "Needs airflow for accurate readings - don't seal against enclosure"
+    }
+  ],
+  "datasheet_url": "https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

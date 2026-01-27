@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}My Projects - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1>My Projects</h1>
+                <p>Your enclosure designs and works in progress</p>
+            </div>
+            <a href="{{ url_for('projects.new') }}" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Project
+            </a>
+        </div>
+    </div>
+
+    {% if projects %}
+    <div class="grid grid-3">
+        {% for project in projects %}
+        <div class="card" style="cursor: pointer;" onclick="window.location='{{ url_for('projects.edit', project_id=project.id) }}'">
+            <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+                <h3>{{ project.name }}</h3>
+                {% if project.ready_to_generate %}
+                <span class="badge badge-success">Ready</span>
+                {% else %}
+                <span class="badge badge-warning">In Progress</span>
+                {% endif %}
+            </div>
+
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                {{ project.description or 'No description' }}
+            </p>
+
+            <div style="font-size: 0.875rem;">
+                <strong>{{ project.components|length }}</strong> component{% if project.components|length != 1 %}s{% endif %}
+            </div>
+
+            {% if project.components %}
+            <div style="margin-top: 0.5rem;">
+                {% for comp in project.components[:3] %}
+                <span class="badge badge-primary" style="margin-right: 0.25rem;">{{ comp.component_name }}</span>
+                {% endfor %}
+                {% if project.components|length > 3 %}
+                <span class="badge badge-secondary">+{{ project.components|length - 3 }} more</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% set unplaced = project.get_all_unplaced_features() %}
+            {% if unplaced %}
+            <div class="alert alert-warning" style="margin-top: 0.75rem; margin-bottom: 0; padding: 0.5rem;">
+                <span style="font-size: 0.75rem;">{{ unplaced|length }} hole{% if unplaced|length != 1 %}s{% endif %} still need to be placed</span>
+            </div>
+            {% endif %}
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.75rem;">
+                Updated {{ project.updated_at[:10] }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin: 0 auto 1rem;">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        </svg>
+        <h2 style="margin-bottom: 0.5rem;">No Projects Yet</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            Create your first enclosure project to get started.
+        </p>
+        <a href="{{ url_for('projects.new') }}" class="btn btn-primary btn-lg">
+            Create Your First Project
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{
+  "id": "esp8266-nodemcu",
+  "name": "ESP8266 NodeMCU V3",
+  "manufacturer": "Various",
+  "category": "microcontrollers",
+  "description": "WiFi-enabled microcontroller development board based on ESP-12E module",
+  "dimensions": {
+    "length_mm": 58.0,
+    "width_mm": 31.0,
+    "height_mm": 7.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "amazon": "B010O1G1ES",
+    "aliexpress": "NodeMCU-ESP8266"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "Micro USB Port",
+      "description": "Programming and power via Micro USB (CH340 or CP2102)",
+      "position_x_mm": 29.0,
+      "position_y_mm": 0,
+      "position_z_mm": 1.5,
+      "hole_width_mm": 8.5,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "RST Button",
+      "description": "Reset the ESP8266",
+      "position_x_mm": 8.0,
+      "position_y_mm": 5.0,
+      "position_z_mm": 7.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "FLASH Button",
+      "description": "Enter flash/bootloader mode",
+      "position_x_mm": 8.0,
+      "position_y_mm": 26.0,
+      "position_z_mm": 7.0,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 4.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Onboard LED",
+      "description": "Blue LED connected to GPIO2",
+      "position_x_mm": 45.0,
+      "position_y_mm": 15.5,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "antenna",
+      "name": "PCB Antenna",
+      "description": "Built-in PCB antenna on ESP-12E module",
+      "position_x_mm": 48.0,
+      "position_y_mm": 8.0,
+      "position_z_mm": 0,
+      "hole_width_mm": 8.0,
+      "hole_height_mm": 15.0,
+      "required_face": "any",
+      "requires_external_access": false
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Left GPIO Header",
+      "description": "15-pin header for GPIO/power",
+      "position_x_mm": 0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 7.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 55.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Right GPIO Header",
+      "description": "15-pin header for GPIO/power",
+      "position_x_mm": 28.0,
+      "position_y_mm": 1.27,
+      "position_z_mm": 7.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 55.0,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 2.5, "y": 2.5, "diameter": 3.0},
+      {"x": 55.5, "y": 2.5, "diameter": 3.0},
+      {"x": 2.5, "y": 28.5, "diameter": 3.0},
+      {"x": 55.5, "y": 28.5, "diameter": 3.0}
+    ]
+  },
+  "keepouts": [
+    {
+      "type": "antenna",
+      "position": {"x": 48, "y": 8},
+      "size": {"length": 8, "width": 15},
+      "description": "Keep metal away from antenna"
+    }
+  ],
+  "datasheet_url": "https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

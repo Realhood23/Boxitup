@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Add Component - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container" x-data="componentForm()">
+    <div class="page-header">
+        <a href="{{ url_for('components.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+            &larr; Back to Components
+        </a>
+        <h1 style="margin-top: 0.5rem;">Add New Component</h1>
+        <p>Add a component to the database for everyone to use</p>
+    </div>
+
+    <!-- Auto-Import Section -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.125rem; margin-bottom: 1rem;">Quick Import from Distributor</h2>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Paste a DigiKey or Mouser product URL to automatically extract component information.
+        </p>
+        <form action="{{ url_for('components.fetch_from_url') }}" method="GET" class="flex gap-2">
+            <input type="url"
+                   name="url"
+                   class="form-input"
+                   placeholder="https://www.digikey.com/en/products/detail/..."
+                   style="flex: 1;">
+            <button type="submit" class="btn btn-secondary">
+                <span class="htmx-indicator spinner"></span>
+                Fetch Data
+            </button>
+        </form>
+    </div>
+
+    <!-- Manual Entry Form -->
+    <form method="POST" action="{{ url_for('components.add') }}">
+        <div class="grid grid-2" style="gap: 1.5rem;">
+            <!-- Left Column - Basic Info -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Basic Information</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Component Name *</label>
+                        <input type="text" name="name" class="form-input" required
+                               value="{{ prefilled_data.name if prefilled_data else form_data.name if form_data else '' }}"
+                               placeholder="e.g., ESP32-WROOM-32">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Manufacturer *</label>
+                        <input type="text" name="manufacturer" class="form-input" required
+                               value="{{ prefilled_data.manufacturer if prefilled_data else '' }}"
+                               placeholder="e.g., Espressif">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select name="category" class="form-select" required>
+                            <option value="">Select category...</option>
+                            <option value="microcontrollers">Microcontrollers</option>
+                            <option value="displays">Displays</option>
+                            <option value="sensors">Sensors</option>
+                            <option value="connectors">Connectors</option>
+                            <option value="power">Power Components</option>
+                            <option value="audio">Audio</option>
+                            <option value="wireless">Wireless Modules</option>
+                            <option value="storage">Storage</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-textarea" rows="3"
+                                  placeholder="Brief description of the component">{{ prefilled_data.description if prefilled_data else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Dimensions (mm) *</h2>
+                    </div>
+
+                    <div class="grid grid-3" style="gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Length (X)</label>
+                            <input type="number" name="length_mm" class="form-input" step="0.1" required
+                                   value="{{ prefilled_data.dimensions.length_mm if prefilled_data and prefilled_data.dimensions else '' }}"
+                                   placeholder="25.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Width (Y)</label>
+                            <input type="number" name="width_mm" class="form-input" step="0.1" required
+                                   value="{{ prefilled_data.dimensions.width_mm if prefilled_data and prefilled_data.dimensions else '' }}"
+                                   placeholder="18.0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Height (Z)</label>
+                            <input type="number" name="height_mm" class="form-input" step="0.1" required
+                                   value="{{ prefilled_data.dimensions.height_mm if prefilled_data and prefilled_data.dimensions else '' }}"
+                                   placeholder="3.1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tolerance</label>
+                        <input type="number" name="tolerance_mm" class="form-input" step="0.01"
+                               value="0.1" placeholder="0.1">
+                        <span class="form-hint">Typical manufacturing tolerance</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Distributor Part Numbers</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">DigiKey Part Number</label>
+                        <input type="text" name="digikey_pn" class="form-input"
+                               value="{{ prefilled_data.distributors.digikey if prefilled_data and prefilled_data.distributors else '' }}"
+                               placeholder="e.g., 1965-ESP32-WROOM-32-ND">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mouser Part Number</label>
+                        <input type="text" name="mouser_pn" class="form-input"
+                               value="{{ prefilled_data.distributors.mouser if prefilled_data and prefilled_data.distributors else '' }}"
+                               placeholder="e.g., 356-ESP32-WROOM-32">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Datasheet URL</label>
+                        <input type="url" name="datasheet_url" class="form-input"
+                               value="{{ prefilled_data.datasheet_url if prefilled_data else '' }}"
+                               placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Mounting</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Mounting Type</label>
+                        <select name="mounting_type" class="form-select">
+                            <option value="standoff">Standoffs (screw holes)</option>
+                            <option value="adhesive">Adhesive / Double-sided tape</option>
+                            <option value="snap-in">Snap-in / Clip mount</option>
+                            <option value="none">None / Free-floating</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Features -->
+            <div>
+                <div class="card">
+                    <div class="card-header flex justify-between items-center">
+                        <h2 class="card-title">Features (Ports, Buttons, etc.)</h2>
+                        <button type="button" class="btn btn-sm btn-outline" @click="addFeature()">
+                            + Add Feature
+                        </button>
+                    </div>
+
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Define features that may require cutouts in the enclosure (USB ports, buttons, LEDs, etc.)
+                    </p>
+
+                    <!-- Quick Add Common Features -->
+                    <div style="margin-bottom: 1rem;">
+                        <label class="form-label">Quick Add:</label>
+                        <div class="flex gap-1" style="flex-wrap: wrap;">
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('usb_micro')">Micro USB</button>
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('usb_c')">USB-C</button>
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('reset_button')">Reset Button</button>
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('status_led')">Status LED</button>
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('dc_barrel')">DC Jack</button>
+                            <button type="button" class="btn btn-sm btn-outline" @click="addCommonFeature('sd_card')">SD Card</button>
+                        </div>
+                    </div>
+
+                    <!-- Features List -->
+                    <div id="features-container">
+                        <template x-for="(feature, index) in features" :key="index">
+                            <div class="card" style="background: var(--bg); margin-bottom: 1rem;">
+                                <div class="flex justify-between items-center" style="margin-bottom: 0.75rem;">
+                                    <strong x-text="'Feature ' + (index + 1)"></strong>
+                                    <button type="button" class="btn btn-sm btn-danger" @click="removeFeature(index)">Remove</button>
+                                </div>
+
+                                <div class="grid grid-2" style="gap: 0.75rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">Type</label>
+                                        <select :name="'feature_' + index + '_type'" class="form-select" x-model="feature.type">
+                                            <option value="usb_port">USB Port</option>
+                                            <option value="power_input">Power Input</option>
+                                            <option value="hdmi_port">HDMI Port</option>
+                                            <option value="ethernet_port">Ethernet Port</option>
+                                            <option value="audio_jack">Audio Jack</option>
+                                            <option value="sd_card_slot">SD Card Slot</option>
+                                            <option value="button">Button</option>
+                                            <option value="led_indicator">LED Indicator</option>
+                                            <option value="display">Display</option>
+                                            <option value="gpio_header">GPIO Header</option>
+                                            <option value="antenna">Antenna</option>
+                                            <option value="ventilation">Ventilation</option>
+                                            <option value="cable_entry">Cable Entry</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Name</label>
+                                        <input type="text" :name="'feature_' + index + '_name'" class="form-input"
+                                               x-model="feature.name" placeholder="e.g., Micro USB Port">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <input type="text" :name="'feature_' + index + '_description'" class="form-input"
+                                           x-model="feature.description" placeholder="What is this feature for?">
+                                </div>
+
+                                <div class="grid grid-3" style="gap: 0.75rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">Position X (mm)</label>
+                                        <input type="number" :name="'feature_' + index + '_pos_x'" class="form-input"
+                                               step="0.1" x-model="feature.pos_x" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Position Y (mm)</label>
+                                        <input type="number" :name="'feature_' + index + '_pos_y'" class="form-input"
+                                               step="0.1" x-model="feature.pos_y" placeholder="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Position Z (mm)</label>
+                                        <input type="number" :name="'feature_' + index + '_pos_z'" class="form-input"
+                                               step="0.1" x-model="feature.pos_z" placeholder="0">
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-3" style="gap: 0.75rem;">
+                                    <div class="form-group">
+                                        <label class="form-label">Hole Width (mm)</label>
+                                        <input type="number" :name="'feature_' + index + '_hole_width'" class="form-input"
+                                               step="0.1" x-model="feature.hole_width" placeholder="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Hole Height (mm)</label>
+                                        <input type="number" :name="'feature_' + index + '_hole_height'" class="form-input"
+                                               step="0.1" x-model="feature.hole_height" placeholder="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Preferred Face</label>
+                                        <select :name="'feature_' + index + '_face'" class="form-select" x-model="feature.face">
+                                            <option value="any">Any</option>
+                                            <option value="front">Front</option>
+                                            <option value="back">Back</option>
+                                            <option value="left">Left</option>
+                                            <option value="right">Right</option>
+                                            <option value="top">Top</option>
+                                            <option value="bottom">Bottom</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-4" style="margin-top: 0.5rem;">
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" :name="'feature_' + index + '_circular'" x-model="feature.circular">
+                                        <span style="font-size: 0.875rem;">Circular hole</span>
+                                    </label>
+                                    <label class="flex items-center gap-2">
+                                        <input type="checkbox" :name="'feature_' + index + '_external'" x-model="feature.external" checked>
+                                        <span style="font-size: 0.875rem;">Requires external access</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div x-show="features.length === 0" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <p>No features added yet.</p>
+                        <p style="font-size: 0.875rem;">Use "Quick Add" or click "Add Feature" to define ports and connectors.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-2" style="margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        Add Component to Database
+                    </button>
+                    <a href="{{ url_for('components.index') }}" class="btn btn-outline btn-lg">Cancel</a>
+                </div>
+
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;">
+                    Component will be committed to the GitHub database under your username.
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function componentForm() {
+    return {
+        features: [],
+
+        addFeature() {
+            this.features.push({
+                type: 'usb_port',
+                name: '',
+                description: '',
+                pos_x: 0,
+                pos_y: 0,
+                pos_z: 0,
+                hole_width: 10,
+                hole_height: 10,
+                face: 'any',
+                circular: false,
+                external: true
+            });
+        },
+
+        removeFeature(index) {
+            this.features.splice(index, 1);
+        },
+
+        addCommonFeature(type) {
+            const commonFeatures = {
+                'usb_micro': {
+                    type: 'usb_port',
+                    name: 'Micro USB Port',
+                    description: 'Micro USB connector for power/data',
+                    hole_width: 8.0,
+                    hole_height: 3.5,
+                    circular: false
+                },
+                'usb_c': {
+                    type: 'usb_port',
+                    name: 'USB-C Port',
+                    description: 'USB Type-C connector',
+                    hole_width: 9.5,
+                    hole_height: 3.5,
+                    circular: false
+                },
+                'reset_button': {
+                    type: 'button',
+                    name: 'Reset Button',
+                    description: 'Tactile reset button',
+                    hole_width: 3.0,
+                    hole_height: 3.0,
+                    circular: true,
+                    face: 'top'
+                },
+                'status_led': {
+                    type: 'led_indicator',
+                    name: 'Status LED',
+                    description: 'Power/status indicator LED',
+                    hole_width: 3.0,
+                    hole_height: 3.0,
+                    circular: true,
+                    face: 'top'
+                },
+                'dc_barrel': {
+                    type: 'power_input',
+                    name: 'DC Barrel Jack',
+                    description: 'Standard DC power input (5.5x2.1mm)',
+                    hole_width: 8.0,
+                    hole_height: 8.0,
+                    circular: true
+                },
+                'sd_card': {
+                    type: 'sd_card_slot',
+                    name: 'MicroSD Slot',
+                    description: 'MicroSD card access',
+                    hole_width: 13.0,
+                    hole_height: 2.5,
+                    circular: false
+                }
+            };
+
+            const feature = commonFeatures[type];
+            if (feature) {
+                this.features.push({
+                    ...feature,
+                    pos_x: 0,
+                    pos_y: 0,
+                    pos_z: 0,
+                    face: feature.face || 'any',
+                    circular: feature.circular || false,
+                    external: true
+                });
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

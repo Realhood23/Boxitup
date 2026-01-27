@@ -1,0 +1,162 @@
+{
+  "id": "arduino-uno",
+  "name": "Arduino Uno R3",
+  "manufacturer": "Arduino",
+  "category": "microcontrollers",
+  "description": "Classic ATmega328P development board with USB-B connector",
+  "dimensions": {
+    "length_mm": 68.6,
+    "width_mm": 53.4,
+    "height_mm": 14.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "digikey": "1050-1024-ND",
+    "mouser": "782-A000066",
+    "amazon": "B008GRTSV6"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "USB-B Port",
+      "description": "Programming and power via USB Type-B",
+      "position_x_mm": 9.0,
+      "position_y_mm": 0,
+      "position_z_mm": 4.0,
+      "hole_width_mm": 12.5,
+      "hole_height_mm": 11.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "power_input",
+      "name": "DC Barrel Jack",
+      "description": "7-12V DC power input (2.1mm center positive)",
+      "position_x_mm": 0,
+      "position_y_mm": 7.0,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 9.5,
+      "hole_height_mm": 11.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "left",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "button",
+      "name": "Reset Button",
+      "description": "Reset the Arduino",
+      "position_x_mm": 50.0,
+      "position_y_mm": 2.0,
+      "position_z_mm": 14.0,
+      "hole_width_mm": 5.0,
+      "hole_height_mm": 5.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "ON LED",
+      "description": "Green power indicator",
+      "position_x_mm": 54.0,
+      "position_y_mm": 6.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "TX LED",
+      "description": "Transmit indicator",
+      "position_x_mm": 57.0,
+      "position_y_mm": 6.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "RX LED",
+      "description": "Receive indicator",
+      "position_x_mm": 60.0,
+      "position_y_mm": 6.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "L LED (Pin 13)",
+      "description": "User LED on digital pin 13",
+      "position_x_mm": 63.0,
+      "position_y_mm": 6.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Digital Pins Header",
+      "description": "Digital pins 0-13",
+      "position_x_mm": 18.0,
+      "position_y_mm": 50.8,
+      "position_z_mm": 14.0,
+      "hole_width_mm": 42.0,
+      "hole_height_mm": 3.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Analog Pins Header",
+      "description": "Analog pins A0-A5",
+      "position_x_mm": 41.0,
+      "position_y_mm": 0,
+      "position_z_mm": 14.0,
+      "hole_width_mm": 18.0,
+      "hole_height_mm": 3.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "Power Header",
+      "description": "Power pins (IOREF, Reset, 3.3V, 5V, GND, VIN)",
+      "position_x_mm": 18.0,
+      "position_y_mm": 0,
+      "position_z_mm": 14.0,
+      "hole_width_mm": 20.0,
+      "hole_height_mm": 3.0,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 14.0, "y": 2.5, "diameter": 3.2},
+      {"x": 66.0, "y": 7.6, "diameter": 3.2},
+      {"x": 66.0, "y": 35.6, "diameter": 3.2},
+      {"x": 15.2, "y": 50.8, "diameter": 3.2}
+    ]
+  },
+  "datasheet_url": "https://docs.arduino.cc/hardware/uno-rev3",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

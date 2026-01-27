@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}{{ component.name }} - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <a href="{{ url_for('components.index') }}" style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem;">
+            &larr; Back to Components
+        </a>
+        <div class="flex justify-between items-center" style="margin-top: 0.5rem;">
+            <div>
+                <h1>{{ component.name }}</h1>
+                <p>{{ component.manufacturer }} &middot; {{ component.category|replace('_', ' ')|title }}</p>
+            </div>
+            {% if component.verified %}
+            <span class="badge badge-success">Verified</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-2" style="gap: 1.5rem;">
+        <!-- Left Column - Details -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Description</h2>
+                </div>
+                <p>{{ component.description }}</p>
+
+                {% if component.datasheet_url %}
+                <a href="{{ component.datasheet_url }}" target="_blank" class="btn btn-outline" style="margin-top: 1rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    View Datasheet
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Dimensions</h2>
+                </div>
+                <table class="table">
+                    <tr>
+                        <td>Length (X)</td>
+                        <td><strong>{{ component.length_mm }} mm</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Width (Y)</td>
+                        <td><strong>{{ component.width_mm }} mm</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Height (Z)</td>
+                        <td><strong>{{ component.height_mm }} mm</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Tolerance</td>
+                        <td>&plusmn; {{ component.tolerance_mm }} mm</td>
+                    </tr>
+                </table>
+            </div>
+
+            {% if component.distributors %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Where to Buy</h2>
+                </div>
+                <div class="flex gap-2" style="flex-wrap: wrap;">
+                    {% if component.distributors.digikey %}
+                    <a href="https://www.digikey.com/en/products/detail/{{ component.distributors.digikey }}"
+                       target="_blank" class="btn btn-outline">
+                        DigiKey: {{ component.distributors.digikey }}
+                    </a>
+                    {% endif %}
+                    {% if component.distributors.mouser %}
+                    <a href="https://www.mouser.com/ProductDetail/{{ component.distributors.mouser }}"
+                       target="_blank" class="btn btn-outline">
+                        Mouser: {{ component.distributors.mouser }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Mounting</h2>
+                </div>
+                <p><strong>Type:</strong> {{ component.mounting_type|replace('_', ' ')|title }}</p>
+                {% if component.mounting_holes %}
+                <p style="margin-top: 0.5rem;"><strong>Mounting Holes:</strong></p>
+                <ul style="margin-left: 1.5rem; font-size: 0.875rem;">
+                    {% for hole in component.mounting_holes %}
+                    <li>Position: ({{ hole.x }}, {{ hole.y }}) mm, Diameter: {{ hole.diameter }} mm</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column - Features -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Features Requiring Access Holes</h2>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    When you add this component to a project, you can toggle which features need cutouts in your enclosure.
+                </p>
+
+                {% if component.features %}
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% for feature in component.features %}
+                    <div class="feature-item">
+                        <div class="feature-info">
+                            <div class="feature-name">
+                                {{ feature.name }}
+                                <span class="badge badge-primary" style="margin-left: 0.5rem;">
+                                    {{ feature.feature_type.value|replace('_', ' ')|title }}
+                                </span>
+                            </div>
+                            <div class="feature-desc">{{ feature.description }}</div>
+                            <div style="font-size: 0.75rem; color: var(--secondary); margin-top: 0.25rem;">
+                                Hole: {{ feature.hole_width_mm }} x {{ feature.hole_height_mm }} mm
+                                {% if feature.is_circular %}(circular){% endif %}
+                                &middot; Face: {{ feature.required_face }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted);">This component has no defined features requiring holes.</p>
+                {% endif %}
+            </div>
+
+            {% if component.keepouts %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Keep-Out Zones</h2>
+                </div>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Areas that should be kept clear of obstructions.
+                </p>
+                {% for keepout in component.keepouts %}
+                <div class="alert alert-warning">
+                    <strong>{{ keepout.type|title }}:</strong> {{ keepout.description }}
+                    <br>
+                    <span style="font-size: 0.75rem;">
+                        Size: {{ keepout.size.length }} x {{ keepout.size.width }} mm
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Add to Project CTA -->
+            {% if current_user.is_authenticated %}
+            <div class="card" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                <h3 style="margin-bottom: 0.5rem;">Use in Your Project</h3>
+                <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Add this component to a project to design a custom enclosure.
+                </p>
+                <a href="{{ url_for('projects.new') }}?component={{ component.id }}" class="btn btn-primary">
+                    Create New Project with {{ component.name }}
+                </a>
+            </div>
+            {% endif %}
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 1rem;">
+                Added by {{ component.added_by }} on {{ component.added_date }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Components - Enclosure Generator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1>Component Library</h1>
+                <p>Browse electronic components with pre-measured dimensions and features</p>
+            </div>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('components.add') }}" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Add Component
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <form method="GET" action="{{ url_for('components.index') }}" class="flex gap-4 items-center">
+            <div style="flex: 1;">
+                <input type="text"
+                       name="search"
+                       class="form-input"
+                       placeholder="Search components (e.g., ESP32, Raspberry Pi, OLED...)"
+                       value="{{ search_query }}"
+                       hx-get="{{ url_for('components.api_search') }}"
+                       hx-trigger="keyup changed delay:300ms"
+                       hx-target="#component-grid"
+                       hx-include="[name='category']">
+            </div>
+            <div>
+                <select name="category" class="form-select" style="min-width: 180px;"
+                        hx-get="{{ url_for('components.api_search') }}"
+                        hx-trigger="change"
+                        hx-target="#component-grid"
+                        hx-include="[name='search']">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
+                        {{ cat|replace('_', ' ')|title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+    </div>
+
+    <!-- Component Grid -->
+    <div id="component-grid" class="grid grid-3">
+        {% for component in components %}
+        <div class="component-card" onclick="window.location='{{ url_for('components.detail', component_id=component.id) }}'">
+            <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+                <h3>{{ component.name }}</h3>
+                {% if component.verified %}
+                <span class="badge badge-success" title="Verified dimensions">Verified</span>
+                {% endif %}
+            </div>
+            <span class="manufacturer">{{ component.manufacturer }}</span>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.5rem 0;">
+                {{ component.description[:80] }}{% if component.description|length > 80 %}...{% endif %}
+            </p>
+            <p class="dimensions">
+                {{ component.length_mm }} x {{ component.width_mm }} x {{ component.height_mm }} mm
+            </p>
+            <div style="margin-top: 0.75rem;">
+                {% for feature in component.features[:4] %}
+                <span class="badge badge-primary" style="margin-right: 0.25rem; margin-bottom: 0.25rem;">
+                    {{ feature.name }}
+                </span>
+                {% endfor %}
+                {% if component.features|length > 4 %}
+                <span class="badge badge-secondary">+{{ component.features|length - 4 }} more</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <p style="color: var(--text-muted);">No components found matching your search.</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('components.add') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                Add a New Component
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

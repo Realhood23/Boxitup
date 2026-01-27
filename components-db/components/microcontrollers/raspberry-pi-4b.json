@@ -1,0 +1,204 @@
+{
+  "id": "raspberry-pi-4b",
+  "name": "Raspberry Pi 4 Model B",
+  "manufacturer": "Raspberry Pi Foundation",
+  "category": "microcontrollers",
+  "description": "Quad-core ARM Cortex-A72 single-board computer with 1/2/4/8GB RAM",
+  "dimensions": {
+    "length_mm": 85.0,
+    "width_mm": 56.0,
+    "height_mm": 17.0,
+    "tolerance_mm": 0.5
+  },
+  "distributors": {
+    "digikey": "1690-RASPBERRY-PI-4B-4GB-ND",
+    "mouser": "358-RPI4-MODBP-4GB"
+  },
+  "features": [
+    {
+      "feature_type": "usb_port",
+      "name": "USB-C Power",
+      "description": "USB-C power input (5V 3A minimum)",
+      "position_x_mm": 10.6,
+      "position_y_mm": 0,
+      "position_z_mm": 3.5,
+      "hole_width_mm": 10.0,
+      "hole_height_mm": 4.5,
+      "is_circular": false,
+      "corner_radius_mm": 1.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "hdmi_port",
+      "name": "Micro HDMI 0",
+      "description": "Primary display output (micro HDMI)",
+      "position_x_mm": 26.0,
+      "position_y_mm": 0,
+      "position_z_mm": 3.5,
+      "hole_width_mm": 8.0,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "hdmi_port",
+      "name": "Micro HDMI 1",
+      "description": "Secondary display output (micro HDMI)",
+      "position_x_mm": 39.5,
+      "position_y_mm": 0,
+      "position_z_mm": 3.5,
+      "hole_width_mm": 8.0,
+      "hole_height_mm": 4.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "audio_jack",
+      "name": "3.5mm A/V Jack",
+      "description": "Composite video and stereo audio output",
+      "position_x_mm": 53.5,
+      "position_y_mm": 0,
+      "position_z_mm": 6.0,
+      "hole_width_mm": 7.0,
+      "hole_height_mm": 7.0,
+      "is_circular": true,
+      "required_face": "front",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "usb_port",
+      "name": "USB 2.0 Ports (x2)",
+      "description": "Dual stacked USB 2.0 Type-A ports",
+      "position_x_mm": 85.0,
+      "position_y_mm": 9.0,
+      "position_z_mm": 6.0,
+      "hole_width_mm": 6.0,
+      "hole_height_mm": 16.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "right",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "usb_port",
+      "name": "USB 3.0 Ports (x2)",
+      "description": "Dual stacked USB 3.0 Type-A ports (blue)",
+      "position_x_mm": 85.0,
+      "position_y_mm": 27.0,
+      "position_z_mm": 6.0,
+      "hole_width_mm": 6.0,
+      "hole_height_mm": 16.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "right",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "ethernet_port",
+      "name": "Gigabit Ethernet",
+      "description": "RJ45 Gigabit Ethernet with activity LEDs",
+      "position_x_mm": 85.0,
+      "position_y_mm": 45.5,
+      "position_z_mm": 6.0,
+      "hole_width_mm": 6.0,
+      "hole_height_mm": 16.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "right",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "gpio_header",
+      "name": "40-pin GPIO Header",
+      "description": "40-pin GPIO header (2x20)",
+      "position_x_mm": 7.0,
+      "position_y_mm": 29.0,
+      "position_z_mm": 17.0,
+      "hole_width_mm": 52.0,
+      "hole_height_mm": 6.0,
+      "is_circular": false,
+      "corner_radius_mm": 1.0,
+      "required_face": "top",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "sd_card_slot",
+      "name": "MicroSD Card Slot",
+      "description": "MicroSD card for OS and storage (extends past board edge)",
+      "position_x_mm": 0,
+      "position_y_mm": 22.0,
+      "position_z_mm": 1.5,
+      "hole_width_mm": 4.0,
+      "hole_height_mm": 14.0,
+      "is_circular": false,
+      "corner_radius_mm": 0.5,
+      "required_face": "left",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Activity LED",
+      "description": "Green activity/SD card LED",
+      "position_x_mm": 1.0,
+      "position_y_mm": 8.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "left",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "led_indicator",
+      "name": "Power LED",
+      "description": "Red power LED",
+      "position_x_mm": 1.0,
+      "position_y_mm": 4.0,
+      "position_z_mm": 3.0,
+      "hole_width_mm": 3.0,
+      "hole_height_mm": 3.0,
+      "is_circular": true,
+      "required_face": "left",
+      "requires_external_access": true
+    },
+    {
+      "feature_type": "ventilation",
+      "name": "CPU/RAM Area",
+      "description": "Area above SoC that generates heat",
+      "position_x_mm": 23.0,
+      "position_y_mm": 23.0,
+      "position_z_mm": 5.0,
+      "hole_width_mm": 20.0,
+      "hole_height_mm": 20.0,
+      "is_circular": false,
+      "required_face": "top",
+      "requires_external_access": true
+    }
+  ],
+  "mounting": {
+    "type": "standoff",
+    "holes": [
+      {"x": 3.5, "y": 3.5, "diameter": 2.75},
+      {"x": 61.5, "y": 3.5, "diameter": 2.75},
+      {"x": 3.5, "y": 52.5, "diameter": 2.75},
+      {"x": 61.5, "y": 52.5, "diameter": 2.75}
+    ]
+  },
+  "keepouts": [
+    {
+      "type": "wifi_antenna",
+      "position": {"x": 0, "y": 42},
+      "size": {"length": 22, "width": 14},
+      "description": "WiFi/BT antenna area - avoid metal covers"
+    }
+  ],
+  "datasheet_url": "https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-datasheet.pdf",
+  "added_by": "system",
+  "added_date": "2026-01-26",
+  "verified": true
+}

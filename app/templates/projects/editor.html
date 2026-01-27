@@ -1,0 +1,1985 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Project Editor{% endblock %}
+
+{% block extra_head %}
+<!-- Three.js for 3D preview -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="{{ url_for('static', filename='js/three-preview.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .editor-layout {
+        display: grid;
+        grid-template-columns: 320px 1fr 320px;
+        gap: 1rem;
+        height: calc(100vh - 120px);
+        padding: 1rem;
+    }
+
+    .editor-panel {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .panel-header {
+        padding: 0.75rem 1rem;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .panel-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .panel-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .panel-tab {
+        flex: 1;
+        padding: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-size: 0.875rem;
+    }
+
+    .panel-tab.active {
+        border-bottom-color: var(--primary);
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    /* Canvas area */
+    .canvas-container {
+        background: #1a1a2e;
+        border-radius: 0.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .canvas-toolbar {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        display: flex;
+        gap: 0.5rem;
+        z-index: 10;
+    }
+
+    .canvas-zoom-controls {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: flex;
+        gap: 0.25rem;
+        z-index: 10;
+    }
+
+    .canvas-info {
+        position: absolute;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-family: monospace;
+    }
+
+    .canvas-coords {
+        position: absolute;
+        bottom: 0.75rem;
+        right: 0.75rem;
+        background: rgba(0,0,0,0.7);
+        color: #4a9eff;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-family: monospace;
+    }
+
+    #enclosure-canvas {
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+    }
+
+    #enclosure-canvas.dragging {
+        cursor: grabbing;
+    }
+
+    #enclosure-canvas.drag-component {
+        cursor: move;
+    }
+
+    /* Component list items */
+    .component-list-item {
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .component-list-item:hover {
+        border-color: var(--primary);
+    }
+
+    .component-list-item.selected {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .component-list-item h4 {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .component-list-item .dims {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    /* Feature toggles */
+    .feature-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .feature-toggle.enabled {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .feature-toggle.placed {
+        border-color: var(--success);
+        background: #f0fdf4;
+    }
+
+    .feature-toggle .status-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+    }
+
+    .status-pending {
+        background: var(--warning);
+        color: white;
+    }
+
+    .status-placed {
+        background: var(--success);
+        color: white;
+    }
+
+    /* Validation banner */
+    .validation-banner {
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.875rem;
+    }
+
+    .validation-banner.warning {
+        background: #fef3c7;
+        border-bottom: 1px solid #fcd34d;
+    }
+
+    .validation-banner.success {
+        background: #dcfce7;
+        border-bottom: 1px solid #86efac;
+    }
+
+    /* Enclosure config */
+    .config-section {
+        margin-bottom: 1rem;
+    }
+
+    .config-section h4 {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+
+    .config-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .config-row label {
+        flex: 1;
+        font-size: 0.75rem;
+    }
+
+    .config-row input,
+    .config-row select {
+        width: 80px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+    }
+
+    /* Face selector */
+    .face-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .face-btn {
+        padding: 0.5rem;
+        text-align: center;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .face-btn:hover {
+        border-color: var(--primary);
+    }
+
+    .face-btn.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="projectEditor()" x-init="init()">
+    <!-- Validation Banner -->
+    <div class="validation-banner" :class="unplacedCount > 0 ? 'warning' : 'success'">
+        <div>
+            <template x-if="unplacedCount > 0">
+                <span>
+                    <strong x-text="unplacedCount"></strong> feature(s) still need holes placed before you can generate
+                </span>
+            </template>
+            <template x-if="unplacedCount === 0 && projectComponents.length > 0">
+                <span style="color: #166534;">
+                    All holes placed! Ready to generate OpenSCAD script.
+                </span>
+            </template>
+            <template x-if="projectComponents.length === 0">
+                <span>Add components to start designing your enclosure</span>
+            </template>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn btn-outline btn-sm" @click="autoSuggestHoles()" :disabled="unplacedCount === 0">
+                Auto-Suggest Holes
+            </button>
+            <a href="{{ url_for('generator.preview', project_id=project.id) }}"
+               class="btn btn-primary btn-sm"
+               :class="{ 'disabled': unplacedCount > 0 || projectComponents.length === 0 }">
+                Generate OpenSCAD
+            </a>
+        </div>
+    </div>
+
+    <div class="editor-layout">
+        <!-- Left Panel: Components -->
+        <div class="editor-panel">
+            <div class="panel-tabs">
+                <div class="panel-tab" :class="{ active: leftTab === 'project' }" @click="leftTab = 'project'">
+                    Project Components
+                </div>
+                <div class="panel-tab" :class="{ active: leftTab === 'library' }" @click="leftTab = 'library'">
+                    Add from Library
+                </div>
+            </div>
+
+            <div class="panel-content">
+                <!-- Project Components Tab -->
+                <div x-show="leftTab === 'project'">
+                    <template x-if="projectComponents.length === 0">
+                        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            <p>No components added yet.</p>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+                                Switch to "Add from Library" to add components.
+                            </p>
+                        </div>
+                    </template>
+
+                    <template x-for="comp in projectComponents" :key="comp.id">
+                        <div class="component-list-item"
+                             :class="{ selected: selectedComponent?.id === comp.id }"
+                             @click="selectComponent(comp)">
+                            <div class="flex justify-between items-center">
+                                <h4 x-text="comp.component_name"></h4>
+                                <button class="btn btn-sm btn-danger" @click.stop="removeComponent(comp.id)">
+                                    &times;
+                                </button>
+                            </div>
+                            <div class="dims">
+                                Position: (<span x-text="comp.position.x_mm"></span>,
+                                <span x-text="comp.position.y_mm"></span>) mm
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <template x-for="feat in comp.enabled_features.filter(f => f.enabled)" :key="feat.feature_id">
+                                    <span class="badge" :class="feat.hole_placed ? 'badge-success' : 'badge-warning'"
+                                          style="margin-right: 0.25rem; font-size: 0.65rem;">
+                                        <span x-text="feat.feature_name"></span>
+                                        <span x-text="feat.hole_placed ? '✓' : '!'"></span>
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Library Tab -->
+                <div x-show="leftTab === 'library'">
+                    <input type="text"
+                           class="form-input"
+                           placeholder="Search components..."
+                           x-model="componentSearch"
+                           @input.debounce.300ms="searchComponents()"
+                           style="margin-bottom: 0.75rem;">
+
+                    <div id="library-results">
+                        {% for comp in components %}
+                        <div class="component-list-item"
+                             @click="addComponent('{{ comp.id }}', '{{ comp.name }}')">
+                            <h4>{{ comp.name }}</h4>
+                            <div class="dims">{{ comp.length_mm }} x {{ comp.width_mm }} x {{ comp.height_mm }} mm</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ comp.manufacturer }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Canvas -->
+        <div class="editor-panel canvas-container">
+            <div class="canvas-toolbar">
+                <button class="btn btn-sm" :class="viewMode === 'top' ? 'btn-primary' : 'btn-outline'"
+                        @click="setViewMode('top')">Top</button>
+                <button class="btn btn-sm" :class="viewMode === 'front' ? 'btn-primary' : 'btn-outline'"
+                        @click="setViewMode('front')">Front</button>
+                <button class="btn btn-sm" :class="viewMode === 'side' ? 'btn-primary' : 'btn-outline'"
+                        @click="setViewMode('side')">Side</button>
+                <button class="btn btn-sm" :class="viewMode === '3d' ? 'btn-primary' : 'btn-outline'"
+                        @click="setViewMode('3d')">3D</button>
+                <span x-show="viewMode !== '3d'" style="color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-left: 0.5rem;">
+                    Drag components to position
+                </span>
+                <span x-show="viewMode === '3d'" style="color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-left: 0.5rem;">
+                    Drag to rotate • Scroll to zoom
+                </span>
+            </div>
+
+            <div class="canvas-zoom-controls" x-show="viewMode !== '3d'">
+                <button class="btn btn-sm btn-outline" @click="zoomIn()" title="Zoom In">+</button>
+                <button class="btn btn-sm btn-outline" @click="zoomOut()" title="Zoom Out">−</button>
+                <button class="btn btn-sm btn-outline" @click="resetZoom()" title="Reset View">⟲</button>
+                <button class="btn btn-sm" :class="snapToGrid ? 'btn-primary' : 'btn-outline'"
+                        @click="snapToGrid = !snapToGrid" title="Snap to Grid">
+                    ⊞
+                </button>
+            </div>
+
+            <!-- 3D View Controls -->
+            <div class="canvas-zoom-controls" x-show="viewMode === '3d'">
+                <button class="btn btn-sm" :class="show3DLid ? 'btn-primary' : 'btn-outline'"
+                        @click="toggle3DLid()" title="Toggle Lid">
+                    ⬛
+                </button>
+                <button class="btn btn-sm" :class="exploded3DView ? 'btn-primary' : 'btn-outline'"
+                        @click="toggleExplodedView()" title="Exploded View">
+                    ↕
+                </button>
+                <button class="btn btn-sm btn-outline" @click="reset3DView()" title="Reset View">⟲</button>
+            </div>
+
+            <!-- 2D Canvas -->
+            <canvas id="enclosure-canvas"
+                    x-show="viewMode !== '3d'"
+                    @mousedown="onCanvasMouseDown($event)"
+                    @mousemove="onCanvasMouseMove($event)"
+                    @mouseup="onCanvasMouseUp($event)"
+                    @mouseleave="onCanvasMouseUp($event)"
+                    @wheel="onCanvasWheel($event)"
+                    @dblclick="onCanvasDoubleClick($event)"></canvas>
+
+            <!-- 3D Preview Container -->
+            <div id="three-preview-container"
+                 x-show="viewMode === '3d'"
+                 style="width: 100%; height: 100%;"></div>
+
+            <div class="canvas-info">
+                <span x-text="'Enclosure: ' + enclosure.inner_length + ' x ' + enclosure.inner_width + ' x ' + enclosure.inner_height + ' mm'"></span>
+                <span x-show="selectedComponent"> | Selected: <span x-text="selectedComponent?.component_name"></span></span>
+                <span x-show="zoom !== 1"> | Zoom: <span x-text="Math.round(zoom * 100) + '%'"></span></span>
+            </div>
+
+            <div class="canvas-coords" x-show="mouseCoords.show">
+                X: <span x-text="mouseCoords.x.toFixed(1)"></span> mm,
+                Y: <span x-text="mouseCoords.y.toFixed(1)"></span> mm
+            </div>
+        </div>
+
+        <!-- Right Panel: Properties & Features -->
+        <div class="editor-panel">
+            <div class="panel-tabs">
+                <div class="panel-tab" :class="{ active: rightTab === 'features' }" @click="rightTab = 'features'">
+                    Features
+                </div>
+                <div class="panel-tab" :class="{ active: rightTab === 'enclosure' }" @click="rightTab = 'enclosure'">
+                    Enclosure
+                </div>
+                <div class="panel-tab" :class="{ active: rightTab === 'holes' }" @click="rightTab = 'holes'">
+                    Holes
+                </div>
+            </div>
+
+            <div class="panel-content">
+                <!-- Features Tab -->
+                <div x-show="rightTab === 'features'">
+                    <template x-if="!selectedComponent">
+                        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            Select a component to toggle its features
+                        </div>
+                    </template>
+
+                    <template x-if="selectedComponent">
+                        <div>
+                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;" x-text="selectedComponent.component_name"></h3>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                                Toggle features on/off. Enabled features require a hole to be placed.
+                            </p>
+
+                            <template x-for="feat in selectedComponent.enabled_features" :key="feat.feature_id">
+                                <div class="feature-toggle"
+                                     :class="{ enabled: feat.enabled, placed: feat.hole_placed }">
+                                    <div>
+                                        <div style="font-weight: 500;" x-text="feat.feature_name"></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                            <span x-text="feat.feature_id.replace('_', ' ')"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <template x-if="feat.enabled && !feat.hole_placed">
+                                            <button class="btn btn-sm btn-warning" @click="placeHoleForFeature(feat)">
+                                                Place Hole
+                                            </button>
+                                        </template>
+                                        <template x-if="feat.hole_placed">
+                                            <span class="status-icon status-placed">✓</span>
+                                        </template>
+                                        <label class="toggle">
+                                            <input type="checkbox"
+                                                   :checked="feat.enabled"
+                                                   @change="toggleFeature(selectedComponent.id, feat.feature_id, $event.target.checked)">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template x-if="selectedComponent.enabled_features.length === 0">
+                                <p style="color: var(--text-muted); font-size: 0.875rem;">
+                                    This component has no defined features.
+                                </p>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Enclosure Tab -->
+                <div x-show="rightTab === 'enclosure'">
+                    <div class="config-section">
+                        <h4>Dimensions (inner, mm)</h4>
+                        <div class="config-row">
+                            <label>Length (X)</label>
+                            <input type="number" x-model.number="enclosure.inner_length" @change="updateEnclosure()">
+                        </div>
+                        <div class="config-row">
+                            <label>Width (Y)</label>
+                            <input type="number" x-model.number="enclosure.inner_width" @change="updateEnclosure()">
+                        </div>
+                        <div class="config-row">
+                            <label>Height (Z)</label>
+                            <input type="number" x-model.number="enclosure.inner_height" @change="updateEnclosure()">
+                        </div>
+                        <button class="btn btn-sm btn-outline" style="width: 100%; margin-top: 0.5rem;"
+                                @click="autoSizeEnclosure()">
+                            Auto-Size to Components
+                        </button>
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Walls</h4>
+                        <div class="config-row">
+                            <label>Wall Thickness</label>
+                            <input type="number" x-model.number="enclosure.wall_thickness" step="0.5" @change="updateEnclosure()">
+                        </div>
+                        <div class="config-row">
+                            <label>Bottom Thickness</label>
+                            <input type="number" x-model.number="enclosure.bottom_thickness" step="0.5" @change="updateEnclosure()">
+                        </div>
+                        <div class="config-row">
+                            <label>Corner Radius</label>
+                            <input type="number" x-model.number="enclosure.corner_radius" step="0.5" @change="updateEnclosure()">
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Shape</h4>
+                        <select class="form-select" x-model="enclosure.shape" @change="updateEnclosure()" style="width: 100%;">
+                            <option value="box">Rectangular Box</option>
+                            <option value="rounded_box">Rounded Box</option>
+                            <option value="cylinder">Cylinder</option>
+                            <option value="hexagon">Hexagon</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Lid Type</h4>
+                        <select class="form-select" x-model="enclosure.lid_type" @change="updateEnclosure()" style="width: 100%;">
+                            <option value="none">No Lid</option>
+                            <option value="snap_fit">Snap Fit</option>
+                            <option value="screw_mount">Screw Mount</option>
+                            <option value="sliding">Sliding</option>
+                            <option value="press_fit">Press Fit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Holes Tab -->
+                <div x-show="rightTab === 'holes'">
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn btn-primary btn-sm" style="width: 100%;" @click="addCustomHole()">
+                            + Add Custom Hole
+                        </button>
+                    </div>
+
+                    <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem;">Placed Holes</h4>
+
+                    <template x-if="holes.length === 0">
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">
+                            No holes placed yet. Enable features on components or add custom holes.
+                        </p>
+                    </template>
+
+                    <template x-for="hole in holes.filter(h => h.hole_type !== 'ventilation')" :key="hole.id">
+                        <div class="feature-toggle" style="cursor: pointer;" @click="selectHole(hole)">
+                            <div>
+                                <div style="font-weight: 500;" x-text="hole.name"></div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    <span x-text="hole.face"></span> face |
+                                    <span x-text="(hole.width_mm || 10) + ' x ' + (hole.height_mm || 10) + ' mm'"></span>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)">
+                                &times;
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Ventilation Zones -->
+                    <h4 style="font-size: 0.875rem; margin: 1rem 0 0.5rem;">Ventilation</h4>
+
+                    <template x-for="hole in holes.filter(h => h.hole_type === 'ventilation')" :key="hole.id">
+                        <div class="feature-toggle" style="cursor: pointer; border-color: #f59e0b;">
+                            <div>
+                                <div style="font-weight: 500;" x-text="hole.name"></div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                    <span x-text="hole.face"></span> face |
+                                    <span x-text="(hole.width_mm || hole.zone_width_mm) + ' x ' + (hole.height_mm || hole.zone_height_mm) + ' mm'"></span>
+                                    <span class="badge badge-warning" style="margin-left: 0.25rem;">vent</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)">
+                                &times;
+                            </button>
+                        </div>
+                    </template>
+
+                    <button class="btn btn-outline btn-sm" style="width: 100%; margin-top: 0.5rem;" @click="addVentilation()">
+                        + Add Ventilation Zone
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hole Placement Modal -->
+    <div x-show="showHoleModal" x-cloak
+         style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="card" style="width: 400px; max-width: 90vw;">
+            <h3 style="margin-bottom: 1rem;">Place Hole: <span x-text="holeModal.name"></span></h3>
+
+            <div class="form-group">
+                <label class="form-label">Face</label>
+                <div class="face-selector">
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: holeModal.face === 'back' }"
+                         @click="holeModal.face = 'back'">Back</div>
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: holeModal.face === 'left' }"
+                         @click="holeModal.face = 'left'">Left</div>
+                    <div class="face-btn" :class="{ selected: holeModal.face === 'top' }"
+                         @click="holeModal.face = 'top'">Top</div>
+                    <div class="face-btn" :class="{ selected: holeModal.face === 'right' }"
+                         @click="holeModal.face = 'right'">Right</div>
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: holeModal.face === 'front' }"
+                         @click="holeModal.face = 'front'">Front</div>
+                    <div></div>
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">X Position (mm)</label>
+                    <input type="number" class="form-input" x-model.number="holeModal.x" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Y Position (mm)</label>
+                    <input type="number" class="form-input" x-model.number="holeModal.y" step="0.5">
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">Width (mm)</label>
+                    <input type="number" class="form-input" x-model.number="holeModal.width" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Height (mm)</label>
+                    <input type="number" class="form-input" x-model.number="holeModal.height" step="0.5">
+                </div>
+            </div>
+
+            <label class="flex items-center gap-2" style="margin-bottom: 1rem;">
+                <input type="checkbox" x-model="holeModal.circular">
+                <span>Circular hole</span>
+            </label>
+
+            <div class="flex gap-2">
+                <button class="btn btn-primary" style="flex: 1;" @click="confirmHolePlacement()">
+                    Place Hole
+                </button>
+                <button class="btn btn-outline" @click="showHoleModal = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventilation Zone Modal -->
+    <div x-show="showVentModal" x-cloak
+         style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="card" style="width: 500px; max-width: 95vw; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-bottom: 1rem;">Add Ventilation Zone</h3>
+
+            <div class="form-group">
+                <label class="form-label">Pattern Type</label>
+                <select class="form-select" x-model="ventModal.pattern" style="width: 100%;">
+                    <option value="grid">Grid of Round Holes</option>
+                    <option value="slots_horizontal">Horizontal Slots</option>
+                    <option value="slots_vertical">Vertical Slots</option>
+                    <option value="honeycomb">Honeycomb Pattern</option>
+                    <option value="louvers">Angled Louvers</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Face</label>
+                <div class="face-selector">
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: ventModal.face === 'back' }"
+                         @click="ventModal.face = 'back'">Back</div>
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: ventModal.face === 'left' }"
+                         @click="ventModal.face = 'left'">Left</div>
+                    <div class="face-btn" :class="{ selected: ventModal.face === 'top' }"
+                         @click="ventModal.face = 'top'">Top</div>
+                    <div class="face-btn" :class="{ selected: ventModal.face === 'right' }"
+                         @click="ventModal.face = 'right'">Right</div>
+                    <div></div>
+                    <div class="face-btn" :class="{ selected: ventModal.face === 'front' }"
+                         @click="ventModal.face = 'front'">Front</div>
+                    <div></div>
+                </div>
+            </div>
+
+            <h4 style="font-size: 0.875rem; color: var(--text-muted); margin: 1rem 0 0.5rem;">Zone Position & Size</h4>
+
+            <div class="grid grid-2" style="gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">X Position (mm)</label>
+                    <input type="number" class="form-input" x-model.number="ventModal.x" step="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Y Position (mm)</label>
+                    <input type="number" class="form-input" x-model.number="ventModal.y" step="1">
+                </div>
+            </div>
+
+            <div class="grid grid-2" style="gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">Zone Width (mm)</label>
+                    <input type="number" class="form-input" x-model.number="ventModal.zoneWidth" step="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Zone Height (mm)</label>
+                    <input type="number" class="form-input" x-model.number="ventModal.zoneHeight" step="1">
+                </div>
+            </div>
+
+            <h4 style="font-size: 0.875rem; color: var(--text-muted); margin: 1rem 0 0.5rem;">Pattern Settings</h4>
+
+            <!-- Grid pattern settings -->
+            <template x-if="ventModal.pattern === 'grid' || ventModal.pattern === 'honeycomb'">
+                <div class="grid grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label">Hole Diameter (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.holeDiameter" step="0.5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Spacing (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.spacing" step="0.5" min="1">
+                    </div>
+                </div>
+            </template>
+
+            <!-- Slot pattern settings -->
+            <template x-if="ventModal.pattern === 'slots_horizontal' || ventModal.pattern === 'slots_vertical'">
+                <div class="grid grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label">Slot Width (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.slotWidth" step="0.5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Slot Length (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.slotLength" step="1" min="5">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Slot Spacing (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.slotSpacing" step="0.5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Corner Radius (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.cornerRadius" step="0.5" min="0">
+                    </div>
+                </div>
+            </template>
+
+            <!-- Louver settings -->
+            <template x-if="ventModal.pattern === 'louvers'">
+                <div class="grid grid-2" style="gap: 0.75rem;">
+                    <div class="form-group">
+                        <label class="form-label">Louver Width (mm)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.louverWidth" step="0.5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Louver Angle (deg)</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.louverAngle" step="5" min="15" max="75">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Louver Count</label>
+                        <input type="number" class="form-input" x-model.number="ventModal.louverCount" step="1" min="2" max="20">
+                    </div>
+                </div>
+            </template>
+
+            <!-- Preview -->
+            <div style="margin: 1rem 0; padding: 1rem; background: #1a1a2e; border-radius: 0.5rem;">
+                <div style="color: #888; font-size: 0.75rem; margin-bottom: 0.5rem;">Preview</div>
+                <canvas id="vent-preview-canvas" width="200" height="100" style="width: 100%; background: #2a2a4e; border-radius: 0.25rem;"></canvas>
+                <div style="color: #4a9eff; font-size: 0.75rem; margin-top: 0.5rem;">
+                    Est. <span x-text="calculateVentHoleCount()"></span> hole(s) |
+                    Open area: ~<span x-text="calculateOpenArea()"></span>%
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button class="btn btn-primary" style="flex: 1;" @click="confirmVentilation()">
+                    Add Ventilation
+                </button>
+                <button class="btn btn-outline" @click="showVentModal = false">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const PROJECT_ID = '{{ project.id }}';
+
+function projectEditor() {
+    return {
+        // UI State
+        leftTab: 'project',
+        rightTab: 'features',
+        viewMode: 'top',
+        selectedComponent: null,
+        showHoleModal: false,
+        showVentModal: false,
+
+        // Canvas interaction state
+        isDragging: false,
+        dragComponent: null,
+        dragStartPos: { x: 0, y: 0 },
+        dragOffset: { x: 0, y: 0 },
+        isPanning: false,
+        panStart: { x: 0, y: 0 },
+        panOffset: { x: 0, y: 0 },
+        zoom: 1,
+        snapToGrid: true,
+        gridSize: 5, // mm
+        mouseCoords: { x: 0, y: 0, show: false },
+
+        // 3D Preview state
+        preview3D: null,
+        show3DLid: true,
+        exploded3DView: false,
+
+        // Component dimensions cache (loaded from server)
+        componentDimensions: {},
+
+        // Data
+        projectComponents: {{ project.components | tojson if project.components else '[]' | safe }},
+        enclosure: {
+            inner_length: {{ project.enclosure_config.dimensions.inner_length_mm if project.enclosure_config else 100 }},
+            inner_width: {{ project.enclosure_config.dimensions.inner_width_mm if project.enclosure_config else 60 }},
+            inner_height: {{ project.enclosure_config.dimensions.inner_height_mm if project.enclosure_config else 30 }},
+            wall_thickness: {{ project.enclosure_config.wall_thickness_mm if project.enclosure_config else 2 }},
+            bottom_thickness: {{ project.enclosure_config.bottom_thickness_mm if project.enclosure_config else 2 }},
+            corner_radius: {{ project.enclosure_config.corner_radius_mm if project.enclosure_config else 0 }},
+            shape: '{{ project.enclosure_config.shape if project.enclosure_config else "box" }}',
+            lid_type: '{{ project.enclosure_config.lid.type if project.enclosure_config else "snap_fit" }}'
+        },
+        holes: {{ project.enclosure_config.holes if project.enclosure_config else '[]' | safe }},
+
+        // Modal data
+        holeModal: {
+            name: '',
+            face: 'front',
+            x: 10,
+            y: 10,
+            width: 10,
+            height: 10,
+            circular: false,
+            componentId: null,
+            featureId: null
+        },
+
+        // Ventilation modal data
+        ventModal: {
+            pattern: 'grid',
+            face: 'top',
+            x: 10,
+            y: 10,
+            zoneWidth: 40,
+            zoneHeight: 30,
+            // Grid/honeycomb settings
+            holeDiameter: 3,
+            spacing: 5,
+            // Slot settings
+            slotWidth: 2,
+            slotLength: 15,
+            slotSpacing: 4,
+            cornerRadius: 1,
+            // Louver settings
+            louverWidth: 3,
+            louverAngle: 45,
+            louverCount: 5
+        },
+
+        // Ventilation zones (stored separately from individual holes)
+        ventilationZones: [],
+
+        componentSearch: '',
+
+        get unplacedCount() {
+            let count = 0;
+            for (const comp of this.projectComponents) {
+                for (const feat of comp.enabled_features || []) {
+                    if (feat.enabled && !feat.hole_placed) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        },
+
+        init() {
+            this.initCanvas();
+            this.loadComponentDimensions();
+
+            // Watch for ventilation modal changes to update preview
+            this.$watch('ventModal', () => {
+                if (this.showVentModal) {
+                    this.drawVentPreview();
+                }
+            }, { deep: true });
+
+            this.$watch('showVentModal', (show) => {
+                if (show) {
+                    this.$nextTick(() => this.drawVentPreview());
+                }
+            });
+        },
+
+        async loadComponentDimensions() {
+            // Load dimensions for all project components
+            for (const comp of this.projectComponents) {
+                if (!this.componentDimensions[comp.component_id]) {
+                    try {
+                        const response = await fetch(`/components/api/${comp.component_id}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.componentDimensions[comp.component_id] = {
+                                length: data.dimensions?.length_mm || 25,
+                                width: data.dimensions?.width_mm || 18,
+                                height: data.dimensions?.height_mm || 10
+                            };
+                        }
+                    } catch (e) {
+                        // Use defaults
+                        this.componentDimensions[comp.component_id] = { length: 25, width: 18, height: 10 };
+                    }
+                }
+            }
+            this.redrawCanvas();
+        },
+
+        initCanvas() {
+            const canvas = document.getElementById('enclosure-canvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            this.resizeCanvas(canvas);
+            this.drawEnclosure(ctx, canvas);
+
+            // Redraw on resize
+            window.addEventListener('resize', () => {
+                this.resizeCanvas(canvas);
+                this.drawEnclosure(ctx, canvas);
+            });
+        },
+
+        resizeCanvas(canvas) {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        },
+
+        redrawCanvas() {
+            const canvas = document.getElementById('enclosure-canvas');
+            if (canvas) {
+                this.drawEnclosure(canvas.getContext('2d'), canvas);
+            }
+        },
+
+        // Canvas coordinate conversion
+        getCanvasTransform(canvas) {
+            const padding = 60;
+            const maxWidth = canvas.width - 2 * padding;
+            const maxHeight = canvas.height - 2 * padding;
+
+            let drawWidth, drawHeight;
+            if (this.viewMode === 'top') {
+                drawWidth = this.enclosure.inner_length;
+                drawHeight = this.enclosure.inner_width;
+            } else if (this.viewMode === 'front') {
+                drawWidth = this.enclosure.inner_length;
+                drawHeight = this.enclosure.inner_height;
+            } else {
+                drawWidth = this.enclosure.inner_width;
+                drawHeight = this.enclosure.inner_height;
+            }
+
+            const baseScale = Math.min(maxWidth / drawWidth, maxHeight / drawHeight);
+            const scale = baseScale * this.zoom;
+            const offsetX = (canvas.width - drawWidth * scale) / 2 + this.panOffset.x;
+            const offsetY = (canvas.height - drawHeight * scale) / 2 + this.panOffset.y;
+
+            return { scale, offsetX, offsetY, drawWidth, drawHeight };
+        },
+
+        screenToWorld(canvas, screenX, screenY) {
+            const { scale, offsetX, offsetY } = this.getCanvasTransform(canvas);
+            return {
+                x: (screenX - offsetX) / scale,
+                y: (screenY - offsetY) / scale
+            };
+        },
+
+        worldToScreen(canvas, worldX, worldY) {
+            const { scale, offsetX, offsetY } = this.getCanvasTransform(canvas);
+            return {
+                x: worldX * scale + offsetX,
+                y: worldY * scale + offsetY
+            };
+        },
+
+        // Mouse event handlers
+        onCanvasMouseDown(e) {
+            const canvas = e.target;
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.screenToWorld(canvas, screenX, screenY);
+
+            // Check if clicking on a component
+            const clickedComp = this.getComponentAtPosition(worldPos.x, worldPos.y);
+
+            if (clickedComp && this.viewMode === 'top') {
+                // Start dragging component
+                this.isDragging = true;
+                this.dragComponent = clickedComp;
+                this.dragStartPos = { x: worldPos.x, y: worldPos.y };
+                this.dragOffset = {
+                    x: worldPos.x - (clickedComp.position?.x_mm || 0),
+                    y: worldPos.y - (clickedComp.position?.y_mm || 0)
+                };
+                this.selectComponent(clickedComp);
+                canvas.classList.add('drag-component');
+            } else if (e.button === 0 && !clickedComp) {
+                // Start panning
+                this.isPanning = true;
+                this.panStart = { x: screenX, y: screenY };
+                canvas.classList.add('dragging');
+            }
+        },
+
+        onCanvasMouseMove(e) {
+            const canvas = e.target;
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.screenToWorld(canvas, screenX, screenY);
+
+            // Update mouse coordinates display
+            this.mouseCoords = {
+                x: Math.max(0, Math.min(worldPos.x, this.enclosure.inner_length)),
+                y: Math.max(0, Math.min(worldPos.y, this.enclosure.inner_width)),
+                show: true
+            };
+
+            if (this.isDragging && this.dragComponent) {
+                // Update component position
+                let newX = worldPos.x - this.dragOffset.x;
+                let newY = worldPos.y - this.dragOffset.y;
+
+                // Snap to grid if enabled
+                if (this.snapToGrid) {
+                    newX = Math.round(newX / this.gridSize) * this.gridSize;
+                    newY = Math.round(newY / this.gridSize) * this.gridSize;
+                }
+
+                // Clamp to enclosure bounds
+                const dims = this.componentDimensions[this.dragComponent.component_id] || { length: 25, width: 18 };
+                newX = Math.max(0, Math.min(newX, this.enclosure.inner_length - dims.length));
+                newY = Math.max(0, Math.min(newY, this.enclosure.inner_width - dims.width));
+
+                this.dragComponent.position = this.dragComponent.position || {};
+                this.dragComponent.position.x_mm = newX;
+                this.dragComponent.position.y_mm = newY;
+
+                this.redrawCanvas();
+            } else if (this.isPanning) {
+                // Update pan offset
+                const dx = screenX - this.panStart.x;
+                const dy = screenY - this.panStart.y;
+                this.panOffset.x += dx;
+                this.panOffset.y += dy;
+                this.panStart = { x: screenX, y: screenY };
+                this.redrawCanvas();
+            }
+        },
+
+        onCanvasMouseUp(e) {
+            const canvas = document.getElementById('enclosure-canvas');
+
+            if (this.isDragging && this.dragComponent) {
+                // Save the new position to the server
+                this.updateComponentPosition(this.dragComponent);
+                canvas.classList.remove('drag-component');
+            }
+
+            if (this.isPanning) {
+                canvas.classList.remove('dragging');
+            }
+
+            this.isDragging = false;
+            this.dragComponent = null;
+            this.isPanning = false;
+            this.mouseCoords.show = false;
+        },
+
+        onCanvasWheel(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            this.zoom = Math.max(0.25, Math.min(4, this.zoom * delta));
+            this.redrawCanvas();
+        },
+
+        onCanvasDoubleClick(e) {
+            const canvas = e.target;
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.screenToWorld(canvas, screenX, screenY);
+
+            const clickedComp = this.getComponentAtPosition(worldPos.x, worldPos.y);
+            if (clickedComp) {
+                this.selectComponent(clickedComp);
+                this.rightTab = 'features';
+            }
+        },
+
+        getComponentAtPosition(x, y) {
+            if (this.viewMode !== 'top') return null;
+
+            for (const comp of [...this.projectComponents].reverse()) {
+                const dims = this.componentDimensions[comp.component_id] || { length: 25, width: 18 };
+                const cx = comp.position?.x_mm || 0;
+                const cy = comp.position?.y_mm || 0;
+
+                if (x >= cx && x <= cx + dims.length &&
+                    y >= cy && y <= cy + dims.width) {
+                    return comp;
+                }
+            }
+            return null;
+        },
+
+        async updateComponentPosition(comp) {
+            try {
+                await fetch(`/projects/api/${PROJECT_ID}/components/${comp.id}/position`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        x_mm: comp.position.x_mm,
+                        y_mm: comp.position.y_mm
+                    })
+                });
+            } catch (e) {
+                console.error('Failed to update position:', e);
+            }
+        },
+
+        zoomIn() {
+            this.zoom = Math.min(4, this.zoom * 1.25);
+            this.redrawCanvas();
+        },
+
+        zoomOut() {
+            this.zoom = Math.max(0.25, this.zoom / 1.25);
+            this.redrawCanvas();
+        },
+
+        resetZoom() {
+            this.zoom = 1;
+            this.panOffset = { x: 0, y: 0 };
+            this.redrawCanvas();
+        },
+
+        drawEnclosure(ctx, canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const { scale, offsetX, offsetY, drawWidth, drawHeight } = this.getCanvasTransform(canvas);
+
+            const w = drawWidth * scale;
+            const h = drawHeight * scale;
+
+            // Draw grid first (behind everything)
+            this.drawGrid(ctx, scale, offsetX, offsetY, w, h);
+
+            // Draw enclosure outline
+            ctx.strokeStyle = '#4a9eff';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(74, 158, 255, 0.1)';
+
+            // Draw based on shape
+            if (this.enclosure.shape === 'rounded_box' && this.enclosure.corner_radius > 0) {
+                const r = this.enclosure.corner_radius * scale;
+                this.roundRect(ctx, offsetX, offsetY, w, h, r);
+            } else if (this.enclosure.shape === 'cylinder') {
+                ctx.beginPath();
+                ctx.ellipse(offsetX + w/2, offsetY + h/2, w/2, h/2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.rect(offsetX, offsetY, w, h);
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            // Draw origin marker
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.arc(offsetX, offsetY, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw axis labels
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '11px sans-serif';
+            ctx.fillText('X →', offsetX + w/2 - 10, offsetY + h + 20);
+            ctx.save();
+            ctx.translate(offsetX - 20, offsetY + h/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText('Y →', -10, 0);
+            ctx.restore();
+
+            // Draw components (sorted by selection - selected on top)
+            const sortedComponents = [...this.projectComponents].sort((a, b) => {
+                if (this.selectedComponent?.id === a.id) return 1;
+                if (this.selectedComponent?.id === b.id) return -1;
+                return 0;
+            });
+
+            for (const comp of sortedComponents) {
+                this.drawComponent(ctx, comp, scale, offsetX, offsetY);
+            }
+
+            // Draw holes
+            for (const hole of this.holes) {
+                if (this.shouldDrawHole(hole)) {
+                    this.drawHole(ctx, hole, scale, offsetX, offsetY);
+                }
+            }
+
+            // Draw drag hint if dragging
+            if (this.isDragging && this.dragComponent) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.font = 'bold 11px sans-serif';
+                const pos = this.dragComponent.position || { x_mm: 0, y_mm: 0 };
+                ctx.fillText(`(${pos.x_mm.toFixed(1)}, ${pos.y_mm.toFixed(1)}) mm`, 10, canvas.height - 40);
+            }
+        },
+
+        drawGrid(ctx, scale, offsetX, offsetY, w, h) {
+            // Major grid lines (10mm)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            const majorGridSize = 10 * scale;
+
+            for (let x = 0; x <= this.enclosure.inner_length; x += 10) {
+                const sx = offsetX + x * scale;
+                ctx.beginPath();
+                ctx.moveTo(sx, offsetY);
+                ctx.lineTo(sx, offsetY + h);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= this.enclosure.inner_width; y += 10) {
+                const sy = offsetY + y * scale;
+                ctx.beginPath();
+                ctx.moveTo(offsetX, sy);
+                ctx.lineTo(offsetX + w, sy);
+                ctx.stroke();
+            }
+
+            // Minor grid lines (5mm) when zoomed in enough
+            if (this.zoom >= 0.75) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+                ctx.lineWidth = 0.5;
+                for (let x = 5; x <= this.enclosure.inner_length; x += 10) {
+                    const sx = offsetX + x * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(sx, offsetY);
+                    ctx.lineTo(sx, offsetY + h);
+                    ctx.stroke();
+                }
+                for (let y = 5; y <= this.enclosure.inner_width; y += 10) {
+                    const sy = offsetY + y * scale;
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX, sy);
+                    ctx.lineTo(offsetX + w, sy);
+                    ctx.stroke();
+                }
+            }
+        },
+
+        roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        },
+
+        drawComponent(ctx, comp, scale, offsetX, offsetY) {
+            const isSelected = this.selectedComponent?.id === comp.id;
+            const isDraggingThis = this.dragComponent?.id === comp.id;
+
+            // Get actual dimensions
+            const dims = this.componentDimensions[comp.component_id] || { length: 25, width: 18, height: 10 };
+
+            let cw, ch;
+            if (this.viewMode === 'top') {
+                cw = dims.length * scale;
+                ch = dims.width * scale;
+            } else if (this.viewMode === 'front') {
+                cw = dims.length * scale;
+                ch = dims.height * scale;
+            } else {
+                cw = dims.width * scale;
+                ch = dims.height * scale;
+            }
+
+            const cx = offsetX + (comp.position?.x_mm || 0) * scale;
+            const cy = offsetY + (comp.position?.y_mm || 0) * scale;
+
+            // Shadow for selected/dragging component
+            if (isSelected || isDraggingThis) {
+                ctx.shadowColor = isSelected ? '#22c55e' : '#4a9eff';
+                ctx.shadowBlur = 10;
+            }
+
+            // Component fill
+            if (isDraggingThis) {
+                ctx.fillStyle = 'rgba(74, 158, 255, 0.4)';
+                ctx.strokeStyle = '#4a9eff';
+            } else if (isSelected) {
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.3)';
+                ctx.strokeStyle = '#22c55e';
+            } else {
+                ctx.fillStyle = 'rgba(255, 200, 100, 0.3)';
+                ctx.strokeStyle = '#ffc864';
+            }
+            ctx.lineWidth = isSelected ? 3 : 2;
+
+            ctx.beginPath();
+            ctx.rect(cx, cy, cw, ch);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+
+            // Draw component name
+            ctx.fillStyle = '#fff';
+            ctx.font = `${isSelected ? 'bold ' : ''}${Math.max(9, Math.min(12, 10 * this.zoom))}px sans-serif`;
+
+            // Truncate name if too long
+            let name = comp.component_name || 'Component';
+            const maxTextWidth = cw - 4;
+            while (ctx.measureText(name).width > maxTextWidth && name.length > 3) {
+                name = name.slice(0, -4) + '...';
+            }
+
+            ctx.fillText(name, cx + 3, cy + 13);
+
+            // Draw dimensions on hover/select
+            if (isSelected && this.zoom >= 0.75) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '9px sans-serif';
+                ctx.fillText(`${dims.length}×${dims.width}mm`, cx + 3, cy + ch - 4);
+            }
+
+            // Draw feature indicators (small circles for enabled features)
+            if (this.viewMode === 'top' && comp.enabled_features) {
+                const enabledFeatures = comp.enabled_features.filter(f => f.enabled);
+                enabledFeatures.forEach((feat, i) => {
+                    const fx = cx + cw - 6 - (i * 8);
+                    const fy = cy + 6;
+                    ctx.beginPath();
+                    ctx.arc(fx, fy, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = feat.hole_placed ? '#22c55e' : '#f59e0b';
+                    ctx.fill();
+                });
+            }
+        },
+
+        drawHole(ctx, hole, scale, offsetX, offsetY) {
+            const hx = offsetX + (hole.position_x_mm || 0) * scale;
+            const hy = offsetY + (hole.position_y_mm || 0) * scale;
+            const hw = (hole.width_mm || 10) * scale;
+            const hh = (hole.height_mm || 10) * scale;
+
+            // Hole fill with pattern
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
+            ctx.strokeStyle = '#ff6464';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            if (hole.is_circular) {
+                ctx.arc(hx + hw/2, hy + hh/2, hw/2, 0, Math.PI * 2);
+            } else {
+                ctx.rect(hx, hy, hw, hh);
+            }
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw hole label if zoomed enough
+            if (this.zoom >= 0.75) {
+                ctx.fillStyle = '#ff9999';
+                ctx.font = '8px sans-serif';
+                ctx.fillText(hole.name || 'Hole', hx + 2, hy + hh + 10);
+            }
+        },
+
+        shouldDrawHole(hole) {
+            if (this.viewMode === 'top') return hole.face === 'top' || hole.face === 'bottom';
+            if (this.viewMode === 'front') return hole.face === 'front' || hole.face === 'back';
+            return hole.face === 'left' || hole.face === 'right';
+        },
+
+        setViewMode(mode) {
+            const previousMode = this.viewMode;
+            this.viewMode = mode;
+
+            if (mode === '3d') {
+                // Initialize or update 3D preview
+                this.init3DPreview();
+            } else {
+                // Switching back to 2D view
+                const canvas = document.getElementById('enclosure-canvas');
+                if (canvas) {
+                    // Need to wait for canvas to be visible
+                    this.$nextTick(() => {
+                        this.resizeCanvas(canvas);
+                        this.drawEnclosure(canvas.getContext('2d'), canvas);
+                    });
+                }
+            }
+        },
+
+        init3DPreview() {
+            if (!this.preview3D) {
+                this.preview3D = new EnclosurePreview3D('three-preview-container');
+                this.preview3D.init();
+            }
+            this.update3DPreview();
+        },
+
+        update3DPreview() {
+            if (!this.preview3D) return;
+
+            this.preview3D.update({
+                enclosure: this.enclosure,
+                components: this.projectComponents,
+                holes: this.holes,
+                componentDimensions: this.componentDimensions,
+                selectedComponentId: this.selectedComponent?.id
+            });
+        },
+
+        toggle3DLid() {
+            this.show3DLid = !this.show3DLid;
+            if (this.preview3D) {
+                this.preview3D.setShowLid(this.show3DLid);
+            }
+        },
+
+        toggleExplodedView() {
+            this.exploded3DView = !this.exploded3DView;
+            if (this.preview3D) {
+                this.preview3D.setExplodedView(this.exploded3DView);
+            }
+        },
+
+        reset3DView() {
+            if (this.preview3D) {
+                this.preview3D.resetView();
+            }
+        },
+
+        selectComponent(comp) {
+            this.selectedComponent = comp;
+            this.rightTab = 'features';
+
+            if (this.viewMode === '3d') {
+                this.update3DPreview();
+            } else {
+                const canvas = document.getElementById('enclosure-canvas');
+                if (canvas) {
+                    this.drawEnclosure(canvas.getContext('2d'), canvas);
+                }
+            }
+        },
+
+        async addComponent(componentId, componentName) {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/components`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component_id: componentId })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.projectComponents.push(data.component);
+                this.leftTab = 'project';
+                this.selectComponent(data.component);
+            }
+        },
+
+        async removeComponent(componentId) {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/components/${componentId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.projectComponents = this.projectComponents.filter(c => c.id !== componentId);
+                if (this.selectedComponent?.id === componentId) {
+                    this.selectedComponent = null;
+                }
+            }
+        },
+
+        async toggleFeature(componentId, featureId, enabled) {
+            const features = {};
+            features[featureId] = enabled;
+
+            const response = await fetch(`/projects/api/${PROJECT_ID}/components/${componentId}/features`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ features })
+            });
+
+            if (response.ok) {
+                // Update local state
+                const comp = this.projectComponents.find(c => c.id === componentId);
+                if (comp) {
+                    const feat = comp.enabled_features.find(f => f.feature_id === featureId);
+                    if (feat) {
+                        feat.enabled = enabled;
+                    }
+                }
+            }
+        },
+
+        placeHoleForFeature(feat) {
+            this.holeModal = {
+                name: feat.feature_name,
+                face: 'front',
+                x: 10,
+                y: 10,
+                width: 10,
+                height: 10,
+                circular: false,
+                componentId: this.selectedComponent?.id,
+                featureId: feat.feature_id
+            };
+            this.showHoleModal = true;
+        },
+
+        addCustomHole() {
+            this.holeModal = {
+                name: 'Custom Hole',
+                face: 'front',
+                x: 10,
+                y: 10,
+                width: 10,
+                height: 10,
+                circular: false,
+                componentId: null,
+                featureId: null
+            };
+            this.showHoleModal = true;
+        },
+
+        async confirmHolePlacement() {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/holes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: this.holeModal.name,
+                    face: this.holeModal.face,
+                    x: this.holeModal.x,
+                    y: this.holeModal.y,
+                    width: this.holeModal.width,
+                    height: this.holeModal.height,
+                    is_circular: this.holeModal.circular,
+                    hole_type: 'component_access',
+                    component_id: this.holeModal.componentId,
+                    feature_id: this.holeModal.featureId
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.holes.push(data.hole);
+
+                // Update feature state
+                if (this.holeModal.componentId && this.holeModal.featureId) {
+                    const comp = this.projectComponents.find(c => c.id === this.holeModal.componentId);
+                    if (comp) {
+                        const feat = comp.enabled_features.find(f => f.feature_id === this.holeModal.featureId);
+                        if (feat) {
+                            feat.hole_placed = true;
+                            feat.hole_id = data.hole.id;
+                        }
+                    }
+                }
+
+                this.showHoleModal = false;
+
+                // Redraw canvas or update 3D preview
+                if (this.viewMode === '3d') {
+                    this.update3DPreview();
+                } else {
+                    const canvas = document.getElementById('enclosure-canvas');
+                    if (canvas) {
+                        this.drawEnclosure(canvas.getContext('2d'), canvas);
+                    }
+                }
+            }
+        },
+
+        async removeHole(holeId) {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/holes/${holeId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                this.holes = this.holes.filter(h => h.id !== holeId);
+
+                // Update feature state
+                for (const comp of this.projectComponents) {
+                    for (const feat of comp.enabled_features || []) {
+                        if (feat.hole_id === holeId) {
+                            feat.hole_placed = false;
+                            feat.hole_id = null;
+                        }
+                    }
+                }
+
+                // Redraw canvas or update 3D preview
+                if (this.viewMode === '3d') {
+                    this.update3DPreview();
+                } else {
+                    const canvas = document.getElementById('enclosure-canvas');
+                    if (canvas) {
+                        this.drawEnclosure(canvas.getContext('2d'), canvas);
+                    }
+                }
+            }
+        },
+
+        async updateEnclosure() {
+            await fetch(`/projects/api/${PROJECT_ID}/enclosure`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dimensions: {
+                        inner_length_mm: this.enclosure.inner_length,
+                        inner_width_mm: this.enclosure.inner_width,
+                        inner_height_mm: this.enclosure.inner_height
+                    },
+                    wall_thickness_mm: this.enclosure.wall_thickness,
+                    bottom_thickness_mm: this.enclosure.bottom_thickness,
+                    corner_radius_mm: this.enclosure.corner_radius,
+                    shape: this.enclosure.shape,
+                    lid: { type: this.enclosure.lid_type }
+                })
+            });
+
+            // Redraw canvas or update 3D preview
+            if (this.viewMode === '3d') {
+                this.update3DPreview();
+            } else {
+                const canvas = document.getElementById('enclosure-canvas');
+                if (canvas) {
+                    this.drawEnclosure(canvas.getContext('2d'), canvas);
+                }
+            }
+        },
+
+        autoSizeEnclosure() {
+            // Calculate size based on components
+            let maxX = 50, maxY = 30;
+            for (const comp of this.projectComponents) {
+                maxX = Math.max(maxX, (comp.position?.x_mm || 0) + 30);
+                maxY = Math.max(maxY, (comp.position?.y_mm || 0) + 20);
+            }
+            this.enclosure.inner_length = Math.ceil(maxX + 10);
+            this.enclosure.inner_width = Math.ceil(maxY + 10);
+            this.updateEnclosure();
+        },
+
+        async autoSuggestHoles() {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/suggest-holes`);
+            if (response.ok) {
+                const data = await response.json();
+                // Would show suggestions to user
+                alert(`Found ${data.suggestions.length} suggested hole placements. Auto-placement coming soon!`);
+            }
+        },
+
+        addVentilation() {
+            // Reset to defaults
+            this.ventModal = {
+                pattern: 'grid',
+                face: 'top',
+                x: 10,
+                y: 10,
+                zoneWidth: 40,
+                zoneHeight: 30,
+                holeDiameter: 3,
+                spacing: 5,
+                slotWidth: 2,
+                slotLength: 15,
+                slotSpacing: 4,
+                cornerRadius: 1,
+                louverWidth: 3,
+                louverAngle: 45,
+                louverCount: 5
+            };
+            this.showVentModal = true;
+
+            // Draw preview after modal is visible
+            this.$nextTick(() => this.drawVentPreview());
+        },
+
+        drawVentPreview() {
+            const canvas = document.getElementById('vent-preview-canvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            // Clear
+            ctx.fillStyle = '#2a2a4e';
+            ctx.fillRect(0, 0, w, h);
+
+            // Scale to fit
+            const scale = Math.min((w - 20) / this.ventModal.zoneWidth, (h - 20) / this.ventModal.zoneHeight);
+            const offsetX = (w - this.ventModal.zoneWidth * scale) / 2;
+            const offsetY = (h - this.ventModal.zoneHeight * scale) / 2;
+
+            // Draw zone boundary
+            ctx.strokeStyle = 'rgba(74, 158, 255, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(offsetX, offsetY, this.ventModal.zoneWidth * scale, this.ventModal.zoneHeight * scale);
+            ctx.setLineDash([]);
+
+            // Draw pattern preview
+            ctx.fillStyle = 'rgba(255, 100, 100, 0.6)';
+            ctx.strokeStyle = '#ff6464';
+            ctx.lineWidth = 1;
+
+            const pattern = this.ventModal.pattern;
+
+            if (pattern === 'grid') {
+                const d = this.ventModal.holeDiameter * scale;
+                const spacing = this.ventModal.spacing * scale;
+                const cols = Math.floor(this.ventModal.zoneWidth / this.ventModal.spacing);
+                const rows = Math.floor(this.ventModal.zoneHeight / this.ventModal.spacing);
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const cx = offsetX + (col + 0.5) * spacing;
+                        const cy = offsetY + (row + 0.5) * spacing;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                }
+            } else if (pattern === 'honeycomb') {
+                const d = this.ventModal.holeDiameter * scale;
+                const spacing = this.ventModal.spacing * scale;
+                const cols = Math.floor(this.ventModal.zoneWidth / this.ventModal.spacing);
+                const rows = Math.floor(this.ventModal.zoneHeight / (this.ventModal.spacing * 0.866));
+
+                for (let row = 0; row < rows; row++) {
+                    for (let col = 0; col < cols; col++) {
+                        const offset = (row % 2) * spacing * 0.5;
+                        const cx = offsetX + col * spacing + offset + spacing / 2;
+                        const cy = offsetY + row * spacing * 0.866 + spacing / 2;
+                        if (cx < offsetX + this.ventModal.zoneWidth * scale && cy < offsetY + this.ventModal.zoneHeight * scale) {
+                            ctx.beginPath();
+                            ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+                        }
+                    }
+                }
+            } else if (pattern === 'slots_horizontal' || pattern === 'slots_vertical') {
+                const slotW = (pattern === 'slots_horizontal' ? this.ventModal.slotLength : this.ventModal.slotWidth) * scale;
+                const slotH = (pattern === 'slots_horizontal' ? this.ventModal.slotWidth : this.ventModal.slotLength) * scale;
+                const spacing = this.ventModal.slotSpacing * scale;
+                const r = this.ventModal.cornerRadius * scale;
+
+                const count = pattern === 'slots_horizontal'
+                    ? Math.floor(this.ventModal.zoneHeight / (this.ventModal.slotWidth + this.ventModal.slotSpacing))
+                    : Math.floor(this.ventModal.zoneWidth / (this.ventModal.slotWidth + this.ventModal.slotSpacing));
+
+                for (let i = 0; i < count; i++) {
+                    let sx, sy;
+                    if (pattern === 'slots_horizontal') {
+                        sx = offsetX + (this.ventModal.zoneWidth * scale - slotW) / 2;
+                        sy = offsetY + i * (slotH + spacing) + spacing / 2;
+                    } else {
+                        sx = offsetX + i * (slotW + spacing) + spacing / 2;
+                        sy = offsetY + (this.ventModal.zoneHeight * scale - slotH) / 2;
+                    }
+                    ctx.beginPath();
+                    ctx.roundRect(sx, sy, slotW, slotH, r);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            } else if (pattern === 'louvers') {
+                const count = this.ventModal.louverCount;
+                const zoneH = this.ventModal.zoneHeight * scale;
+                const zoneW = this.ventModal.zoneWidth * scale;
+                const louverW = this.ventModal.louverWidth * scale;
+                const spacing = zoneH / (count + 1);
+
+                for (let i = 0; i < count; i++) {
+                    const y = offsetY + (i + 1) * spacing;
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX + 5, y - louverW / 2);
+                    ctx.lineTo(offsetX + zoneW - 5, y - louverW / 2);
+                    ctx.lineTo(offsetX + zoneW - 5, y + louverW / 2);
+                    ctx.lineTo(offsetX + 5, y + louverW / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+        },
+
+        calculateVentHoleCount() {
+            const pattern = this.ventModal.pattern;
+
+            if (pattern === 'grid') {
+                const cols = Math.floor(this.ventModal.zoneWidth / this.ventModal.spacing);
+                const rows = Math.floor(this.ventModal.zoneHeight / this.ventModal.spacing);
+                return cols * rows;
+            } else if (pattern === 'honeycomb') {
+                const cols = Math.floor(this.ventModal.zoneWidth / this.ventModal.spacing);
+                const rows = Math.floor(this.ventModal.zoneHeight / (this.ventModal.spacing * 0.866));
+                return Math.floor(cols * rows * 0.9); // Approximate
+            } else if (pattern === 'slots_horizontal') {
+                return Math.floor(this.ventModal.zoneHeight / (this.ventModal.slotWidth + this.ventModal.slotSpacing));
+            } else if (pattern === 'slots_vertical') {
+                return Math.floor(this.ventModal.zoneWidth / (this.ventModal.slotWidth + this.ventModal.slotSpacing));
+            } else if (pattern === 'louvers') {
+                return this.ventModal.louverCount;
+            }
+            return 0;
+        },
+
+        calculateOpenArea() {
+            const pattern = this.ventModal.pattern;
+            const zoneArea = this.ventModal.zoneWidth * this.ventModal.zoneHeight;
+
+            let openArea = 0;
+            if (pattern === 'grid') {
+                const holeArea = Math.PI * Math.pow(this.ventModal.holeDiameter / 2, 2);
+                openArea = holeArea * this.calculateVentHoleCount();
+            } else if (pattern === 'honeycomb') {
+                const holeArea = Math.PI * Math.pow(this.ventModal.holeDiameter / 2, 2);
+                openArea = holeArea * this.calculateVentHoleCount();
+            } else if (pattern === 'slots_horizontal' || pattern === 'slots_vertical') {
+                const slotArea = this.ventModal.slotWidth * this.ventModal.slotLength;
+                openArea = slotArea * this.calculateVentHoleCount();
+            } else if (pattern === 'louvers') {
+                // Approximate - louvers have angled openings
+                openArea = zoneArea * 0.4;
+            }
+
+            return Math.round((openArea / zoneArea) * 100);
+        },
+
+        async confirmVentilation() {
+            // Add ventilation zone to the project
+            const ventZone = {
+                id: 'vent-' + Date.now(),
+                name: `${this.ventModal.pattern.replace('_', ' ')} Ventilation`,
+                pattern: this.ventModal.pattern,
+                face: this.ventModal.face,
+                position_x_mm: this.ventModal.x,
+                position_y_mm: this.ventModal.y,
+                zone_width_mm: this.ventModal.zoneWidth,
+                zone_height_mm: this.ventModal.zoneHeight,
+                settings: { ...this.ventModal }
+            };
+
+            this.ventilationZones.push(ventZone);
+
+            // Also add as a special hole entry for OpenSCAD generation
+            const response = await fetch(`/projects/api/${PROJECT_ID}/holes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: ventZone.name,
+                    face: this.ventModal.face,
+                    x: this.ventModal.x,
+                    y: this.ventModal.y,
+                    width: this.ventModal.zoneWidth,
+                    height: this.ventModal.zoneHeight,
+                    is_circular: false,
+                    hole_type: 'ventilation',
+                    ventilation_pattern: this.ventModal.pattern,
+                    ventilation_settings: { ...this.ventModal }
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.holes.push(data.hole);
+            }
+
+            this.showVentModal = false;
+
+            // Refresh canvas/3D
+            if (this.viewMode === '3d') {
+                this.update3DPreview();
+            } else {
+                this.redrawCanvas();
+            }
+        },
+
+        selectHole(hole) {
+            // Highlight hole, show properties
+        },
+
+        searchComponents() {
+            // HTMX handles this via the search input
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Electronic Component",
+  "description": "Schema for electronic components in the Enclosure Generator database",
+  "type": "object",
+  "required": ["id", "name", "manufacturer", "category", "dimensions"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier (URL-safe slug)",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the component"
+    },
+    "manufacturer": {
+      "type": "string",
+      "description": "Manufacturer name"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["microcontrollers", "displays", "sensors", "connectors", "power", "audio", "wireless", "storage", "other"],
+      "description": "Component category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the component"
+    },
+    "dimensions": {
+      "type": "object",
+      "required": ["length_mm", "width_mm", "height_mm"],
+      "properties": {
+        "length_mm": { "type": "number", "minimum": 0 },
+        "width_mm": { "type": "number", "minimum": 0 },
+        "height_mm": { "type": "number", "minimum": 0 },
+        "tolerance_mm": { "type": "number", "minimum": 0, "default": 0.1 }
+      }
+    },
+    "distributors": {
+      "type": "object",
+      "properties": {
+        "digikey": { "type": "string" },
+        "mouser": { "type": "string" },
+        "amazon": { "type": "string" },
+        "aliexpress": { "type": "string" }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["feature_type", "name", "hole_width_mm", "hole_height_mm"],
+        "properties": {
+          "feature_type": {
+            "type": "string",
+            "enum": ["power_input", "usb_port", "hdmi_port", "ethernet_port", "audio_jack", "sd_card_slot", "antenna", "gpio_header", "button", "led_indicator", "display", "sensor_window", "ventilation", "cable_entry", "mounting_hole", "debug_port", "switch", "potentiometer", "speaker_grille"]
+          },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "position_x_mm": { "type": "number" },
+          "position_y_mm": { "type": "number" },
+          "position_z_mm": { "type": "number" },
+          "hole_width_mm": { "type": "number", "minimum": 0 },
+          "hole_height_mm": { "type": "number", "minimum": 0 },
+          "hole_depth_mm": { "type": ["number", "null"] },
+          "is_circular": { "type": "boolean", "default": false },
+          "corner_radius_mm": { "type": "number", "default": 0 },
+          "required_face": { "type": "string", "enum": ["any", "top", "bottom", "front", "back", "left", "right"], "default": "any" },
+          "min_clearance_mm": { "type": "number", "default": 1.0 },
+          "requires_external_access": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "mounting": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["standoff", "adhesive", "snap-in", "none"] },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "diameter": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "keepouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "size": {
+            "type": "object",
+            "properties": {
+              "length": { "type": "number" },
+              "width": { "type": "number" }
+            }
+          },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "datasheet_url": { "type": "string", "format": "uri" },
+    "image_url": { "type": "string", "format": "uri" },
+    "added_by": { "type": "string" },
+    "added_date": { "type": "string", "format": "date" },
+    "verified": { "type": "boolean", "default": false }
+  }
+}
