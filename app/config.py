@@ -21,6 +21,9 @@ class Config:
     GITHUB_COMPONENTS_REPO = os.environ.get('GITHUB_COMPONENTS_REPO', '')
     GITHUB_COMPONENTS_BRANCH = os.environ.get('GITHUB_COMPONENTS_BRANCH', 'main')
 
+    # GitHub Bot Token (for writing components to the central repo)
+    GITHUB_BOT_TOKEN = os.environ.get('GITHUB_BOT_TOKEN', '')
+
     # Nexar/Octopart API
     NEXAR_CLIENT_ID = os.environ.get('NEXAR_CLIENT_ID')
     NEXAR_CLIENT_SECRET = os.environ.get('NEXAR_CLIENT_SECRET')
