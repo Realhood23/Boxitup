@@ -1,6 +1,6 @@
-# Enclosure Generator Component Database
+# BoxItUp Component Database
 
-This repository contains electronic component definitions for the [Enclosure Generator](https://github.com/your-username/enclosure-generator) web application.
+This repository contains electronic component definitions for the [BoxItUp](https://github.com/Realhood23/Boxitup) web application.
 
 ## Structure
 

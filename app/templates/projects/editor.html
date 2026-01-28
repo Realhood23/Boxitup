@@ -144,7 +144,7 @@
 
     .component-list-item.selected {
         border-color: var(--primary);
-        background: #eff6ff;
+        background: rgba(99, 102, 241, 0.15);
     }
 
     .component-list-item h4 {
@@ -171,12 +171,12 @@
 
     .feature-toggle.enabled {
         border-color: var(--primary);
-        background: #eff6ff;
+        background: rgba(99, 102, 241, 0.15);
     }
 
     .feature-toggle.placed {
         border-color: var(--success);
-        background: #f0fdf4;
+        background: rgba(16, 185, 129, 0.15);
     }
 
     .feature-toggle .status-icon {
@@ -209,13 +209,110 @@
     }
 
     .validation-banner.warning {
-        background: #fef3c7;
-        border-bottom: 1px solid #fcd34d;
+        background: rgba(245, 158, 11, 0.15);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+        color: #fcd34d;
     }
 
     .validation-banner.success {
-        background: #dcfce7;
-        border-bottom: 1px solid #86efac;
+        background: rgba(16, 185, 129, 0.15);
+        border-bottom: 1px solid rgba(16, 185, 129, 0.3);
+        color: #6ee7b7;
+    }
+
+    /* Face selector dropdown in toolbar */
+    .face-dropdown {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        color: var(--text);
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        cursor: pointer;
+    }
+
+    .face-dropdown:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    /* Inline hole form styles */
+    .inline-hole-form {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .inline-hole-form h4 {
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .inline-hole-form .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .inline-hole-form .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .inline-hole-form .form-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.125rem;
+    }
+
+    .inline-hole-form .form-input,
+    .inline-hole-form .form-select {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* Placement mode indicator */
+    .placement-mode-active {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(99, 102, 241, 0.9);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        pointer-events: none;
+        z-index: 20;
+    }
+
+    /* Selected hole highlight */
+    .hole-list-item {
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+    }
+
+    .hole-list-item:hover {
+        border-color: var(--primary);
+    }
+
+    .hole-list-item.selected {
+        border-color: #ff6464;
+        background: rgba(255, 100, 100, 0.15);
+    }
+
+    #enclosure-canvas.placement-mode {
+        cursor: crosshair;
     }
 
     /* Enclosure config */
@@ -387,16 +484,24 @@
         <!-- Center: Canvas -->
         <div class="editor-panel canvas-container">
             <div class="canvas-toolbar">
-                <button class="btn btn-sm" :class="viewMode === 'top' ? 'btn-primary' : 'btn-outline'"
-                        @click="setViewMode('top')">Top</button>
-                <button class="btn btn-sm" :class="viewMode === 'front' ? 'btn-primary' : 'btn-outline'"
-                        @click="setViewMode('front')">Front</button>
-                <button class="btn btn-sm" :class="viewMode === 'side' ? 'btn-primary' : 'btn-outline'"
-                        @click="setViewMode('side')">Side</button>
+                <!-- Face selector dropdown -->
+                <select class="face-dropdown" x-model="currentFace" @change="onFaceChange()">
+                    <option value="top">Top Face</option>
+                    <option value="bottom">Bottom Face</option>
+                    <option value="front">Front Face</option>
+                    <option value="back">Back Face</option>
+                    <option value="left">Left Face</option>
+                    <option value="right">Right Face</option>
+                </select>
+
                 <button class="btn btn-sm" :class="viewMode === '3d' ? 'btn-primary' : 'btn-outline'"
                         @click="setViewMode('3d')">3D</button>
-                <span x-show="viewMode !== '3d'" style="color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-left: 0.5rem;">
-                    Drag components to position
+
+                <span x-show="viewMode !== '3d' && !holePlacementMode" style="color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-left: 0.5rem;">
+                    Drag components/holes to position
+                </span>
+                <span x-show="holePlacementMode" style="color: #a5b4fc; font-size: 0.7rem; margin-left: 0.5rem;">
+                    Click to place hole • ESC to cancel
                 </span>
                 <span x-show="viewMode === '3d'" style="color: rgba(255,255,255,0.5); font-size: 0.7rem; margin-left: 0.5rem;">
                     Drag to rotate • Scroll to zoom
@@ -429,12 +534,19 @@
             <!-- 2D Canvas -->
             <canvas id="enclosure-canvas"
                     x-show="viewMode !== '3d'"
+                    :class="{ 'placement-mode': holePlacementMode }"
                     @mousedown="onCanvasMouseDown($event)"
                     @mousemove="onCanvasMouseMove($event)"
                     @mouseup="onCanvasMouseUp($event)"
-                    @mouseleave="onCanvasMouseUp($event)"
+                    @mouseleave="onCanvasMouseLeave($event)"
                     @wheel="onCanvasWheel($event)"
-                    @dblclick="onCanvasDoubleClick($event)"></canvas>
+                    @dblclick="onCanvasDoubleClick($event)"
+                    @keydown.escape.window="cancelPlacementMode()"></canvas>
+
+            <!-- Placement mode indicator -->
+            <div class="placement-mode-active" x-show="holePlacementMode">
+                Click to place hole at cursor position
+            </div>
 
             <!-- 3D Preview Container -->
             <div id="three-preview-container"
@@ -442,9 +554,11 @@
                  style="width: 100%; height: 100%;"></div>
 
             <div class="canvas-info">
-                <span x-text="'Enclosure: ' + enclosure.inner_length + ' x ' + enclosure.inner_width + ' x ' + enclosure.inner_height + ' mm'"></span>
-                <span x-show="selectedComponent"> | Selected: <span x-text="selectedComponent?.component_name"></span></span>
-                <span x-show="zoom !== 1"> | Zoom: <span x-text="Math.round(zoom * 100) + '%'"></span></span>
+                <span x-text="currentFace.charAt(0).toUpperCase() + currentFace.slice(1) + ' face'"></span>
+                <span x-text="' | ' + getFaceDimensions().width + ' x ' + getFaceDimensions().height + ' mm'"></span>
+                <span x-show="selectedComponent"> | Comp: <span x-text="selectedComponent?.component_name"></span></span>
+                <span x-show="selectedHole"> | Hole: <span x-text="selectedHole?.name"></span></span>
+                <span x-show="zoom !== 1"> | <span x-text="Math.round(zoom * 100) + '%'"></span></span>
             </div>
 
             <div class="canvas-coords" x-show="mouseCoords.show">
@@ -582,32 +696,106 @@
 
                 <!-- Holes Tab -->
                 <div x-show="rightTab === 'holes'">
-                    <div style="margin-bottom: 1rem;">
-                        <button class="btn btn-primary btn-sm" style="width: 100%;" @click="addCustomHole()">
+                    <!-- Inline Hole Form -->
+                    <div class="inline-hole-form" x-show="holeForm.show">
+                        <h4>
+                            <span x-text="holeForm.isEditing ? 'Edit Hole' : 'New Hole'"></span>
+                            <button class="btn btn-sm btn-outline" @click="cancelHoleForm()" style="padding: 0.125rem 0.375rem;">&times;</button>
+                        </h4>
+
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-input" x-model="holeForm.name" placeholder="Hole name">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Face</label>
+                            <select class="form-select" x-model="holeForm.face" @change="syncFaceToCanvas()" style="width: 100%;">
+                                <option value="front">Front</option>
+                                <option value="back">Back</option>
+                                <option value="left">Left</option>
+                                <option value="right">Right</option>
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">X Position (mm)</label>
+                                <input type="number" class="form-input" x-model.number="holeForm.x" step="0.5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Y Position (mm)</label>
+                                <input type="number" class="form-input" x-model.number="holeForm.y" step="0.5">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Width (mm)</label>
+                                <input type="number" class="form-input" x-model.number="holeForm.width" step="0.5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Height (mm)</label>
+                                <input type="number" class="form-input" x-model.number="holeForm.height" step="0.5">
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2" style="margin-bottom: 0.75rem; font-size: 0.8rem;">
+                            <input type="checkbox" x-model="holeForm.circular">
+                            <span>Circular hole</span>
+                        </label>
+
+                        <div class="flex gap-2" style="margin-bottom: 0.5rem;">
+                            <button class="btn btn-sm" style="flex: 1;"
+                                    :class="holePlacementMode ? 'btn-warning' : 'btn-outline'"
+                                    @click="togglePlacementMode()">
+                                <span x-text="holePlacementMode ? 'Cancel Placing' : 'Click to Place'"></span>
+                            </button>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="btn btn-primary btn-sm" style="flex: 1;" @click="saveHole()">
+                                <span x-text="holeForm.isEditing ? 'Update Hole' : 'Add Hole'"></span>
+                            </button>
+                            <button class="btn btn-outline btn-sm" @click="cancelHoleForm()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <!-- Add Hole Button (when form is hidden) -->
+                    <div x-show="!holeForm.show" style="margin-bottom: 1rem;">
+                        <button class="btn btn-primary btn-sm" style="width: 100%;" @click="showNewHoleForm()">
                             + Add Custom Hole
                         </button>
                     </div>
 
                     <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem;">Placed Holes</h4>
 
-                    <template x-if="holes.length === 0">
+                    <template x-if="holes.filter(h => h.hole_type !== 'ventilation').length === 0 && !holeForm.show">
                         <p style="color: var(--text-muted); font-size: 0.875rem;">
                             No holes placed yet. Enable features on components or add custom holes.
                         </p>
                     </template>
 
                     <template x-for="hole in holes.filter(h => h.hole_type !== 'ventilation')" :key="hole.id">
-                        <div class="feature-toggle" style="cursor: pointer;" @click="selectHole(hole)">
-                            <div>
-                                <div style="font-weight: 500;" x-text="hole.name"></div>
-                                <div style="font-size: 0.7rem; color: var(--text-muted);">
-                                    <span x-text="hole.face"></span> face |
-                                    <span x-text="(hole.width_mm || 10) + ' x ' + (hole.height_mm || 10) + ' mm'"></span>
+                        <div class="hole-list-item"
+                             :class="{ selected: selectedHole?.id === hole.id }"
+                             @click="selectHoleForEdit(hole)">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div style="font-weight: 500;" x-text="hole.name"></div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                        <span x-text="hole.face"></span> face |
+                                        (<span x-text="hole.position_x_mm?.toFixed(1) || 0"></span>,
+                                        <span x-text="hole.position_y_mm?.toFixed(1) || 0"></span>) |
+                                        <span x-text="(hole.width_mm || 10) + 'x' + (hole.height_mm || 10)"></span>mm
+                                    </div>
                                 </div>
+                                <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)" style="padding: 0.125rem 0.375rem;">
+                                    &times;
+                                </button>
                             </div>
-                            <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)">
-                                &times;
-                            </button>
                         </div>
                     </template>
 
@@ -615,18 +803,20 @@
                     <h4 style="font-size: 0.875rem; margin: 1rem 0 0.5rem;">Ventilation</h4>
 
                     <template x-for="hole in holes.filter(h => h.hole_type === 'ventilation')" :key="hole.id">
-                        <div class="feature-toggle" style="cursor: pointer; border-color: #f59e0b;">
-                            <div>
-                                <div style="font-weight: 500;" x-text="hole.name"></div>
-                                <div style="font-size: 0.7rem; color: var(--text-muted);">
-                                    <span x-text="hole.face"></span> face |
-                                    <span x-text="(hole.width_mm || hole.zone_width_mm) + ' x ' + (hole.height_mm || hole.zone_height_mm) + ' mm'"></span>
-                                    <span class="badge badge-warning" style="margin-left: 0.25rem;">vent</span>
+                        <div class="hole-list-item" style="border-color: rgba(245, 158, 11, 0.5);">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div style="font-weight: 500;" x-text="hole.name"></div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                        <span x-text="hole.face"></span> face |
+                                        <span x-text="(hole.width_mm || hole.zone_width_mm) + 'x' + (hole.height_mm || hole.zone_height_mm)"></span>mm
+                                        <span class="badge badge-warning" style="margin-left: 0.25rem;">vent</span>
+                                    </div>
                                 </div>
+                                <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)" style="padding: 0.125rem 0.375rem;">
+                                    &times;
+                                </button>
                             </div>
-                            <button class="btn btn-sm btn-danger" @click.stop="removeHole(hole.id)">
-                                &times;
-                            </button>
                         </div>
                     </template>
 
@@ -848,9 +1038,33 @@ function projectEditor() {
         leftTab: 'project',
         rightTab: 'features',
         viewMode: 'top',
+        currentFace: 'top',  // Which face is displayed on canvas
         selectedComponent: null,
+        selectedHole: null,  // Currently selected hole for editing
         showHoleModal: false,
         showVentModal: false,
+
+        // Hole placement state
+        holePlacementMode: false,  // When true, click places hole
+        pendingHole: null,  // Ghost hole preview data
+        isDraggingHole: false,  // Dragging a hole
+        dragHole: null,  // Hole being dragged
+
+        // Inline hole form state
+        holeForm: {
+            show: false,
+            isEditing: false,
+            editingHoleId: null,
+            name: 'Custom Hole',
+            face: 'front',
+            x: 10,
+            y: 10,
+            width: 10,
+            height: 10,
+            circular: false,
+            componentId: null,
+            featureId: null
+        },
 
         // Canvas interaction state
         isDragging: false,
@@ -1014,17 +1228,10 @@ function projectEditor() {
             const maxWidth = canvas.width - 2 * padding;
             const maxHeight = canvas.height - 2 * padding;
 
-            let drawWidth, drawHeight;
-            if (this.viewMode === 'top') {
-                drawWidth = this.enclosure.inner_length;
-                drawHeight = this.enclosure.inner_width;
-            } else if (this.viewMode === 'front') {
-                drawWidth = this.enclosure.inner_length;
-                drawHeight = this.enclosure.inner_height;
-            } else {
-                drawWidth = this.enclosure.inner_width;
-                drawHeight = this.enclosure.inner_height;
-            }
+            // Use currentFace to determine dimensions
+            const faceDims = this.getFaceDimensions();
+            const drawWidth = faceDims.width;
+            const drawHeight = faceDims.height;
 
             const baseScale = Math.min(maxWidth / drawWidth, maxHeight / drawHeight);
             const scale = baseScale * this.zoom;
@@ -1058,10 +1265,48 @@ function projectEditor() {
             const screenY = e.clientY - rect.top;
             const worldPos = this.screenToWorld(canvas, screenX, screenY);
 
-            // Check if clicking on a component
+            // If in placement mode, place the hole
+            if (this.holePlacementMode) {
+                let x = worldPos.x - this.holeForm.width / 2;
+                let y = worldPos.y - this.holeForm.height / 2;
+
+                // Snap to grid
+                if (this.snapToGrid) {
+                    x = Math.round(x / this.gridSize) * this.gridSize;
+                    y = Math.round(y / this.gridSize) * this.gridSize;
+                }
+
+                // Clamp to face bounds
+                const faceDims = this.getFaceDimensions();
+                x = Math.max(0, Math.min(x, faceDims.width - this.holeForm.width));
+                y = Math.max(0, Math.min(y, faceDims.height - this.holeForm.height));
+
+                this.holeForm.x = x;
+                this.holeForm.y = y;
+                this.holePlacementMode = false;
+                this.pendingHole = null;
+                this.redrawCanvas();
+                return;
+            }
+
+            // Check if clicking on a hole (for dragging)
+            const clickedHole = this.getHoleAtPosition(worldPos.x, worldPos.y);
+            if (clickedHole) {
+                this.isDraggingHole = true;
+                this.dragHole = clickedHole;
+                this.dragOffset = {
+                    x: worldPos.x - (clickedHole.position_x_mm || 0),
+                    y: worldPos.y - (clickedHole.position_y_mm || 0)
+                };
+                this.selectHoleForEdit(clickedHole);
+                canvas.classList.add('drag-component');
+                return;
+            }
+
+            // Check if clicking on a component (only in top view)
             const clickedComp = this.getComponentAtPosition(worldPos.x, worldPos.y);
 
-            if (clickedComp && this.viewMode === 'top') {
+            if (clickedComp && (this.currentFace === 'top' || this.currentFace === 'bottom')) {
                 // Start dragging component
                 this.isDragging = true;
                 this.dragComponent = clickedComp;
@@ -1072,7 +1317,7 @@ function projectEditor() {
                 };
                 this.selectComponent(clickedComp);
                 canvas.classList.add('drag-component');
-            } else if (e.button === 0 && !clickedComp) {
+            } else if (e.button === 0 && !clickedComp && !clickedHole) {
                 // Start panning
                 this.isPanning = true;
                 this.panStart = { x: screenX, y: screenY };
@@ -1087,12 +1332,62 @@ function projectEditor() {
             const screenY = e.clientY - rect.top;
             const worldPos = this.screenToWorld(canvas, screenX, screenY);
 
+            // Get face dimensions for clamping
+            const faceDims = this.getFaceDimensions();
+
             // Update mouse coordinates display
             this.mouseCoords = {
-                x: Math.max(0, Math.min(worldPos.x, this.enclosure.inner_length)),
-                y: Math.max(0, Math.min(worldPos.y, this.enclosure.inner_width)),
+                x: Math.max(0, Math.min(worldPos.x, faceDims.width)),
+                y: Math.max(0, Math.min(worldPos.y, faceDims.height)),
                 show: true
             };
+
+            // Update pending hole position (ghost preview) in placement mode
+            if (this.holePlacementMode && this.pendingHole) {
+                let x = worldPos.x - this.holeForm.width / 2;
+                let y = worldPos.y - this.holeForm.height / 2;
+
+                if (this.snapToGrid) {
+                    x = Math.round(x / this.gridSize) * this.gridSize;
+                    y = Math.round(y / this.gridSize) * this.gridSize;
+                }
+
+                x = Math.max(0, Math.min(x, faceDims.width - this.holeForm.width));
+                y = Math.max(0, Math.min(y, faceDims.height - this.holeForm.height));
+
+                this.pendingHole.x = x;
+                this.pendingHole.y = y;
+                this.redrawCanvas();
+                return;
+            }
+
+            // Dragging a hole
+            if (this.isDraggingHole && this.dragHole) {
+                let newX = worldPos.x - this.dragOffset.x;
+                let newY = worldPos.y - this.dragOffset.y;
+
+                if (this.snapToGrid) {
+                    newX = Math.round(newX / this.gridSize) * this.gridSize;
+                    newY = Math.round(newY / this.gridSize) * this.gridSize;
+                }
+
+                const hw = this.dragHole.width_mm || 10;
+                const hh = this.dragHole.height_mm || 10;
+                newX = Math.max(0, Math.min(newX, faceDims.width - hw));
+                newY = Math.max(0, Math.min(newY, faceDims.height - hh));
+
+                this.dragHole.position_x_mm = newX;
+                this.dragHole.position_y_mm = newY;
+
+                // Update form values in real-time
+                if (this.holeForm.show && this.holeForm.editingHoleId === this.dragHole.id) {
+                    this.holeForm.x = newX;
+                    this.holeForm.y = newY;
+                }
+
+                this.redrawCanvas();
+                return;
+            }
 
             if (this.isDragging && this.dragComponent) {
                 // Update component position
@@ -1129,6 +1424,20 @@ function projectEditor() {
         onCanvasMouseUp(e) {
             const canvas = document.getElementById('enclosure-canvas');
 
+            // Save hole position after dragging
+            if (this.isDraggingHole && this.dragHole) {
+                this.updateHolePosition(this.dragHole.id, {
+                    name: this.dragHole.name,
+                    face: this.dragHole.face,
+                    position_x_mm: this.dragHole.position_x_mm,
+                    position_y_mm: this.dragHole.position_y_mm,
+                    width_mm: this.dragHole.width_mm,
+                    height_mm: this.dragHole.height_mm,
+                    is_circular: this.dragHole.is_circular
+                });
+                canvas.classList.remove('drag-component');
+            }
+
             if (this.isDragging && this.dragComponent) {
                 // Save the new position to the server
                 this.updateComponentPosition(this.dragComponent);
@@ -1141,6 +1450,8 @@ function projectEditor() {
 
             this.isDragging = false;
             this.dragComponent = null;
+            this.isDraggingHole = false;
+            this.dragHole = null;
             this.isPanning = false;
             this.mouseCoords.show = false;
         },
@@ -1213,6 +1524,229 @@ function projectEditor() {
             this.redrawCanvas();
         },
 
+        // Face selector methods
+        onFaceChange() {
+            // Switch canvas view to show the selected face
+            if (this.currentFace === 'top' || this.currentFace === 'bottom') {
+                this.viewMode = 'top';
+            } else if (this.currentFace === 'front' || this.currentFace === 'back') {
+                this.viewMode = 'front';
+            } else {
+                this.viewMode = 'side';
+            }
+            this.resetZoom();
+            this.redrawCanvas();
+        },
+
+        syncFaceToCanvas() {
+            // When face changes in form, update canvas to show that face
+            this.currentFace = this.holeForm.face;
+            this.onFaceChange();
+        },
+
+        getFaceDimensions() {
+            // Get width/height for the current face view
+            const e = this.enclosure;
+            switch (this.currentFace) {
+                case 'top':
+                case 'bottom':
+                    return { width: e.inner_length, height: e.inner_width };
+                case 'front':
+                case 'back':
+                    return { width: e.inner_length, height: e.inner_height };
+                case 'left':
+                case 'right':
+                    return { width: e.inner_width, height: e.inner_height };
+            }
+            return { width: e.inner_length, height: e.inner_width };
+        },
+
+        // Inline hole form methods
+        showNewHoleForm() {
+            this.holeForm = {
+                show: true,
+                isEditing: false,
+                editingHoleId: null,
+                name: 'Custom Hole',
+                face: this.currentFace,
+                x: 10,
+                y: 10,
+                width: 10,
+                height: 10,
+                circular: false,
+                componentId: null,
+                featureId: null
+            };
+            this.rightTab = 'holes';
+        },
+
+        selectHoleForEdit(hole) {
+            this.selectedHole = hole;
+            this.holeForm = {
+                show: true,
+                isEditing: true,
+                editingHoleId: hole.id,
+                name: hole.name,
+                face: hole.face,
+                x: hole.position_x_mm || 0,
+                y: hole.position_y_mm || 0,
+                width: hole.width_mm || 10,
+                height: hole.height_mm || 10,
+                circular: hole.is_circular || false,
+                componentId: hole.component_id,
+                featureId: hole.feature_id
+            };
+            // Switch canvas to show this hole's face
+            this.currentFace = hole.face;
+            this.onFaceChange();
+            this.redrawCanvas();
+        },
+
+        cancelHoleForm() {
+            this.holeForm.show = false;
+            this.holePlacementMode = false;
+            this.pendingHole = null;
+            this.selectedHole = null;
+            this.redrawCanvas();
+        },
+
+        async saveHole() {
+            if (this.holeForm.isEditing) {
+                // Update existing hole
+                await this.updateHolePosition(this.holeForm.editingHoleId, {
+                    name: this.holeForm.name,
+                    face: this.holeForm.face,
+                    position_x_mm: this.holeForm.x,
+                    position_y_mm: this.holeForm.y,
+                    width_mm: this.holeForm.width,
+                    height_mm: this.holeForm.height,
+                    is_circular: this.holeForm.circular
+                });
+            } else {
+                // Create new hole
+                await this.createHole();
+            }
+            this.cancelHoleForm();
+        },
+
+        async createHole() {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/holes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: this.holeForm.name,
+                    face: this.holeForm.face,
+                    x: this.holeForm.x,
+                    y: this.holeForm.y,
+                    width: this.holeForm.width,
+                    height: this.holeForm.height,
+                    is_circular: this.holeForm.circular,
+                    hole_type: 'component_access',
+                    component_id: this.holeForm.componentId,
+                    feature_id: this.holeForm.featureId
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.holes.push(data.hole);
+
+                // Update feature state if linked to a feature
+                if (this.holeForm.componentId && this.holeForm.featureId) {
+                    const comp = this.projectComponents.find(c => c.id === this.holeForm.componentId);
+                    if (comp) {
+                        const feat = comp.enabled_features.find(f => f.feature_id === this.holeForm.featureId);
+                        if (feat) {
+                            feat.hole_placed = true;
+                            feat.hole_id = data.hole.id;
+                        }
+                    }
+                }
+
+                this.redrawCanvas();
+                if (this.viewMode === '3d') {
+                    this.update3DPreview();
+                }
+            }
+        },
+
+        async updateHolePosition(holeId, updates) {
+            const response = await fetch(`/projects/api/${PROJECT_ID}/holes/${holeId}/position`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+
+            if (response.ok) {
+                // Update local state
+                const hole = this.holes.find(h => h.id === holeId);
+                if (hole) {
+                    Object.assign(hole, {
+                        name: updates.name,
+                        face: updates.face,
+                        position_x_mm: updates.position_x_mm,
+                        position_y_mm: updates.position_y_mm,
+                        width_mm: updates.width_mm,
+                        height_mm: updates.height_mm,
+                        is_circular: updates.is_circular
+                    });
+                }
+                this.redrawCanvas();
+                if (this.viewMode === '3d') {
+                    this.update3DPreview();
+                }
+            }
+        },
+
+        // Placement mode methods
+        togglePlacementMode() {
+            this.holePlacementMode = !this.holePlacementMode;
+            if (this.holePlacementMode) {
+                // Initialize pending hole for ghost preview
+                this.pendingHole = {
+                    x: this.holeForm.x,
+                    y: this.holeForm.y,
+                    width: this.holeForm.width,
+                    height: this.holeForm.height,
+                    circular: this.holeForm.circular
+                };
+            } else {
+                this.pendingHole = null;
+            }
+            this.redrawCanvas();
+        },
+
+        cancelPlacementMode() {
+            if (this.holePlacementMode) {
+                this.holePlacementMode = false;
+                this.pendingHole = null;
+                this.redrawCanvas();
+            }
+        },
+
+        // Get hole at a position (for clicking/dragging)
+        getHoleAtPosition(x, y) {
+            // Only check holes on current face
+            const faceHoles = this.holes.filter(h => h.face === this.currentFace);
+
+            for (const hole of [...faceHoles].reverse()) {
+                const hx = hole.position_x_mm || 0;
+                const hy = hole.position_y_mm || 0;
+                const hw = hole.width_mm || 10;
+                const hh = hole.height_mm || 10;
+
+                if (x >= hx && x <= hx + hw && y >= hy && y <= hy + hh) {
+                    return hole;
+                }
+            }
+            return null;
+        },
+
+        onCanvasMouseLeave(e) {
+            this.onCanvasMouseUp(e);
+            this.mouseCoords.show = false;
+        },
+
         drawEnclosure(ctx, canvas) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1275,8 +1809,14 @@ function projectEditor() {
             // Draw holes
             for (const hole of this.holes) {
                 if (this.shouldDrawHole(hole)) {
-                    this.drawHole(ctx, hole, scale, offsetX, offsetY);
+                    const isSelected = this.selectedHole?.id === hole.id;
+                    this.drawHole(ctx, hole, scale, offsetX, offsetY, isSelected);
                 }
+            }
+
+            // Draw ghost hole preview in placement mode
+            if (this.holePlacementMode && this.pendingHole) {
+                this.drawGhostHole(ctx, scale, offsetX, offsetY);
             }
 
             // Draw drag hint if dragging
@@ -1286,22 +1826,58 @@ function projectEditor() {
                 const pos = this.dragComponent.position || { x_mm: 0, y_mm: 0 };
                 ctx.fillText(`(${pos.x_mm.toFixed(1)}, ${pos.y_mm.toFixed(1)}) mm`, 10, canvas.height - 40);
             }
+
+            // Draw drag hint if dragging hole
+            if (this.isDraggingHole && this.dragHole) {
+                ctx.fillStyle = 'rgba(255, 100, 100, 0.9)';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText(`Hole: (${this.dragHole.position_x_mm.toFixed(1)}, ${this.dragHole.position_y_mm.toFixed(1)}) mm`, 10, canvas.height - 40);
+            }
+        },
+
+        drawGhostHole(ctx, scale, offsetX, offsetY) {
+            const hx = offsetX + this.pendingHole.x * scale;
+            const hy = offsetY + this.pendingHole.y * scale;
+            const hw = this.holeForm.width * scale;
+            const hh = this.holeForm.height * scale;
+
+            // Dashed outline for ghost
+            ctx.setLineDash([5, 5]);
+            ctx.fillStyle = 'rgba(99, 102, 241, 0.3)';
+            ctx.strokeStyle = '#6366f1';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            if (this.holeForm.circular) {
+                ctx.arc(hx + hw/2, hy + hh/2, hw/2, 0, Math.PI * 2);
+            } else {
+                ctx.rect(hx, hy, hw, hh);
+            }
+            ctx.fill();
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Position label
+            ctx.fillStyle = '#a5b4fc';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(`(${this.pendingHole.x.toFixed(1)}, ${this.pendingHole.y.toFixed(1)})`, hx, hy - 5);
         },
 
         drawGrid(ctx, scale, offsetX, offsetY, w, h) {
+            const faceDims = this.getFaceDimensions();
+
             // Major grid lines (10mm)
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
             ctx.lineWidth = 1;
-            const majorGridSize = 10 * scale;
 
-            for (let x = 0; x <= this.enclosure.inner_length; x += 10) {
+            for (let x = 0; x <= faceDims.width; x += 10) {
                 const sx = offsetX + x * scale;
                 ctx.beginPath();
                 ctx.moveTo(sx, offsetY);
                 ctx.lineTo(sx, offsetY + h);
                 ctx.stroke();
             }
-            for (let y = 0; y <= this.enclosure.inner_width; y += 10) {
+            for (let y = 0; y <= faceDims.height; y += 10) {
                 const sy = offsetY + y * scale;
                 ctx.beginPath();
                 ctx.moveTo(offsetX, sy);
@@ -1313,14 +1889,14 @@ function projectEditor() {
             if (this.zoom >= 0.75) {
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
                 ctx.lineWidth = 0.5;
-                for (let x = 5; x <= this.enclosure.inner_length; x += 10) {
+                for (let x = 5; x <= faceDims.width; x += 10) {
                     const sx = offsetX + x * scale;
                     ctx.beginPath();
                     ctx.moveTo(sx, offsetY);
                     ctx.lineTo(sx, offsetY + h);
                     ctx.stroke();
                 }
-                for (let y = 5; y <= this.enclosure.inner_width; y += 10) {
+                for (let y = 5; y <= faceDims.height; y += 10) {
                     const sy = offsetY + y * scale;
                     ctx.beginPath();
                     ctx.moveTo(offsetX, sy);
@@ -1428,16 +2004,24 @@ function projectEditor() {
             }
         },
 
-        drawHole(ctx, hole, scale, offsetX, offsetY) {
+        drawHole(ctx, hole, scale, offsetX, offsetY, isSelected = false) {
             const hx = offsetX + (hole.position_x_mm || 0) * scale;
             const hy = offsetY + (hole.position_y_mm || 0) * scale;
             const hw = (hole.width_mm || 10) * scale;
             const hh = (hole.height_mm || 10) * scale;
 
-            // Hole fill with pattern
-            ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
-            ctx.strokeStyle = '#ff6464';
-            ctx.lineWidth = 2;
+            // Hole fill with pattern - highlight if selected
+            if (isSelected) {
+                ctx.shadowColor = '#ff6464';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = 'rgba(255, 100, 100, 0.6)';
+                ctx.strokeStyle = '#ff9999';
+                ctx.lineWidth = 3;
+            } else {
+                ctx.fillStyle = 'rgba(255, 100, 100, 0.4)';
+                ctx.strokeStyle = '#ff6464';
+                ctx.lineWidth = 2;
+            }
 
             ctx.beginPath();
             if (hole.is_circular) {
@@ -1448,18 +2032,19 @@ function projectEditor() {
             ctx.fill();
             ctx.stroke();
 
+            ctx.shadowBlur = 0;
+
             // Draw hole label if zoomed enough
             if (this.zoom >= 0.75) {
-                ctx.fillStyle = '#ff9999';
-                ctx.font = '8px sans-serif';
+                ctx.fillStyle = isSelected ? '#ffcccc' : '#ff9999';
+                ctx.font = isSelected ? 'bold 9px sans-serif' : '8px sans-serif';
                 ctx.fillText(hole.name || 'Hole', hx + 2, hy + hh + 10);
             }
         },
 
         shouldDrawHole(hole) {
-            if (this.viewMode === 'top') return hole.face === 'top' || hole.face === 'bottom';
-            if (this.viewMode === 'front') return hole.face === 'front' || hole.face === 'back';
-            return hole.face === 'left' || hole.face === 'right';
+            // Only show holes on the currently selected face
+            return hole.face === this.currentFace;
         },
 
         setViewMode(mode) {
@@ -1587,7 +2172,11 @@ function projectEditor() {
         },
 
         placeHoleForFeature(feat) {
-            this.holeModal = {
+            // Use inline form instead of modal
+            this.holeForm = {
+                show: true,
+                isEditing: false,
+                editingHoleId: null,
                 name: feat.feature_name,
                 face: 'front',
                 x: 10,
@@ -1598,70 +2187,10 @@ function projectEditor() {
                 componentId: this.selectedComponent?.id,
                 featureId: feat.feature_id
             };
-            this.showHoleModal = true;
-        },
-
-        addCustomHole() {
-            this.holeModal = {
-                name: 'Custom Hole',
-                face: 'front',
-                x: 10,
-                y: 10,
-                width: 10,
-                height: 10,
-                circular: false,
-                componentId: null,
-                featureId: null
-            };
-            this.showHoleModal = true;
-        },
-
-        async confirmHolePlacement() {
-            const response = await fetch(`/projects/api/${PROJECT_ID}/holes`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: this.holeModal.name,
-                    face: this.holeModal.face,
-                    x: this.holeModal.x,
-                    y: this.holeModal.y,
-                    width: this.holeModal.width,
-                    height: this.holeModal.height,
-                    is_circular: this.holeModal.circular,
-                    hole_type: 'component_access',
-                    component_id: this.holeModal.componentId,
-                    feature_id: this.holeModal.featureId
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.holes.push(data.hole);
-
-                // Update feature state
-                if (this.holeModal.componentId && this.holeModal.featureId) {
-                    const comp = this.projectComponents.find(c => c.id === this.holeModal.componentId);
-                    if (comp) {
-                        const feat = comp.enabled_features.find(f => f.feature_id === this.holeModal.featureId);
-                        if (feat) {
-                            feat.hole_placed = true;
-                            feat.hole_id = data.hole.id;
-                        }
-                    }
-                }
-
-                this.showHoleModal = false;
-
-                // Redraw canvas or update 3D preview
-                if (this.viewMode === '3d') {
-                    this.update3DPreview();
-                } else {
-                    const canvas = document.getElementById('enclosure-canvas');
-                    if (canvas) {
-                        this.drawEnclosure(canvas.getContext('2d'), canvas);
-                    }
-                }
-            }
+            this.rightTab = 'holes';
+            // Switch canvas to show front face for placement
+            this.currentFace = 'front';
+            this.onFaceChange();
         },
 
         async removeHole(holeId) {

@@ -1,5 +1,5 @@
 /**
- * Three.js 3D Preview for Enclosure Generator
+ * Three.js 3D Preview for BoxItUp
  * Renders a 3D visualization of the enclosure with components and holes
  */
 

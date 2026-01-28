@@ -368,6 +368,62 @@ def api_remove_hole(project_id, hole_id):
     })
 
 
+@projects_bp.route('/api/<project_id>/holes/<hole_id>/position', methods=['PUT'])
+@login_required
+def api_update_hole_position(project_id, hole_id):
+    """
+    Update a hole's position and properties.
+
+    Used for drag-and-drop repositioning and inline form editing.
+    """
+    from app.services.project_service import ProjectService
+    service = ProjectService()
+
+    project = service.get_project(project_id, current_user.id)
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    if not project.enclosure_config:
+        return jsonify({'error': 'No enclosure configuration'}), 400
+
+    data = request.get_json()
+    enclosure = Enclosure.from_dict(project.enclosure_config)
+
+    # Find and update the hole
+    hole_found = False
+    for hole in enclosure.holes:
+        if hole.id == hole_id:
+            hole_found = True
+            # Update position
+            if 'position_x_mm' in data:
+                hole.position_x_mm = data['position_x_mm']
+            if 'position_y_mm' in data:
+                hole.position_y_mm = data['position_y_mm']
+            # Update other properties
+            if 'name' in data:
+                hole.name = data['name']
+            if 'face' in data:
+                hole.face = data['face']
+            if 'width_mm' in data:
+                hole.width_mm = data['width_mm']
+            if 'height_mm' in data:
+                hole.height_mm = data['height_mm']
+            if 'is_circular' in data:
+                hole.is_circular = data['is_circular']
+            break
+
+    if not hole_found:
+        return jsonify({'error': 'Hole not found'}), 404
+
+    project.enclosure_config = enclosure.to_dict()
+    service.save_project(project)
+
+    return jsonify({
+        'success': True,
+        'hole': hole.to_dict()
+    })
+
+
 @projects_bp.route('/api/<project_id>/suggest-holes', methods=['GET'])
 @login_required
 def api_suggest_holes(project_id):
