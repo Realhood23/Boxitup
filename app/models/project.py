@@ -71,6 +71,9 @@ class ProjectComponent:
     use_standoffs: bool = True
     standoff_height_mm: float = 3.0
 
+    # Lock state to prevent accidental movement
+    locked: bool = False
+
     def to_dict(self) -> dict:
         return {
             'id': self.id,
@@ -87,7 +90,8 @@ class ProjectComponent:
             'mounting': {
                 'use_standoffs': self.use_standoffs,
                 'standoff_height_mm': self.standoff_height_mm
-            }
+            },
+            'locked': self.locked
         }
 
     @classmethod
@@ -110,7 +114,8 @@ class ProjectComponent:
             enabled_features=enabled_features,
             feature_quantities=data.get('feature_quantities', {}),
             use_standoffs=mounting.get('use_standoffs', True),
-            standoff_height_mm=mounting.get('standoff_height_mm', 3.0)
+            standoff_height_mm=mounting.get('standoff_height_mm', 3.0),
+            locked=data.get('locked', False)
         )
 
     def get_unplaced_required_features(self) -> list[EnabledFeature]:

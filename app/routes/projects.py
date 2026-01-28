@@ -213,6 +213,30 @@ def api_update_position(project_id, component_instance_id):
     })
 
 
+@projects_bp.route('/api/<project_id>/components/<component_instance_id>/lock', methods=['PUT'])
+@login_required
+def api_update_lock(project_id, component_instance_id):
+    """Update component lock state to prevent accidental movement."""
+    from app.services.project_service import ProjectService
+    service = ProjectService()
+
+    project = service.get_project(project_id, current_user.id)
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    data = request.get_json()
+    locked = data.get('locked', False)
+
+    for comp in project.components:
+        if comp.id == component_instance_id:
+            comp.locked = locked
+            break
+
+    service.save_project(project)
+
+    return jsonify({'success': True, 'locked': locked})
+
+
 @projects_bp.route('/api/<project_id>/components/<component_instance_id>/features', methods=['PUT'])
 @login_required
 def api_update_features(project_id, component_instance_id):
