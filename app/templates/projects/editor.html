@@ -157,7 +157,141 @@
         color: var(--text-muted);
     }
 
-    /* Feature toggles */
+    /* Feature toggles - enhanced styling */
+    .feature-item {
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+        overflow: hidden;
+        transition: all 0.2s;
+    }
+
+    .feature-item.needs-placement {
+        border-color: #ef4444;
+        border-left: 3px solid #ef4444;
+    }
+
+    .feature-item.placed {
+        border-color: #10b981;
+        border-left: 3px solid #10b981;
+    }
+
+    .feature-item.disabled {
+        opacity: 0.6;
+        border-color: var(--border);
+        border-left: 3px solid var(--border);
+    }
+
+    .feature-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg);
+        cursor: pointer;
+    }
+
+    .feature-header:hover {
+        background: var(--bg-elevated);
+    }
+
+    .feature-status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    .feature-status-indicator.placed {
+        background: #10b981;
+    }
+
+    .feature-status-indicator.needs-placement {
+        background: #ef4444;
+    }
+
+    .feature-status-indicator.disabled {
+        background: #64748b;
+    }
+
+    .feature-body {
+        padding: 0.75rem;
+        border-top: 1px solid var(--border);
+        background: var(--bg-card);
+    }
+
+    .feature-name-input {
+        width: 100%;
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        background: var(--bg);
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-name-input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .feature-info {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.65rem;
+        font-weight: 500;
+    }
+
+    .status-badge.placed {
+        background: rgba(16, 185, 129, 0.2);
+        color: #6ee7b7;
+    }
+
+    .status-badge.needs-placement {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+    }
+
+    .status-badge.disabled {
+        background: rgba(100, 116, 139, 0.2);
+        color: #94a3b8;
+    }
+
+    /* Add custom feature button */
+    .add-feature-btn {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px dashed var(--border);
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+    }
+
+    .add-feature-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    /* Legacy toggle styling kept for compatibility */
     .feature-toggle {
         display: flex;
         align-items: center;
@@ -597,50 +731,130 @@
                 <div x-show="rightTab === 'features'">
                     <template x-if="!selectedComponent">
                         <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-                            Select a component to toggle its features
+                            <p>Select a component to manage its features</p>
+                            <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+                                Features are ports, buttons, and other items that may need holes in the enclosure.
+                            </p>
                         </div>
                     </template>
 
                     <template x-if="selectedComponent">
                         <div>
-                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem;" x-text="selectedComponent.component_name"></h3>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
-                                Toggle features on/off. Enabled features require a hole to be placed.
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <h3 style="font-size: 1rem; margin: 0;" x-text="selectedComponent.component_name"></h3>
+                                <span class="status-badge"
+                                      :class="{
+                                          'placed': getEnabledUnplacedCount(selectedComponent) === 0 && getEnabledCount(selectedComponent) > 0,
+                                          'needs-placement': getEnabledUnplacedCount(selectedComponent) > 0,
+                                          'disabled': getEnabledCount(selectedComponent) === 0
+                                      }">
+                                    <span x-show="getEnabledUnplacedCount(selectedComponent) > 0"
+                                          x-text="getEnabledUnplacedCount(selectedComponent) + ' need holes'"></span>
+                                    <span x-show="getEnabledUnplacedCount(selectedComponent) === 0 && getEnabledCount(selectedComponent) > 0">All placed</span>
+                                    <span x-show="getEnabledCount(selectedComponent) === 0">No features enabled</span>
+                                </span>
+                            </div>
+                            <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 1rem;">
+                                Enable features that need access holes. You can rename them and add custom features.
                             </p>
 
+                            <!-- Feature List -->
                             <template x-for="feat in selectedComponent.enabled_features" :key="feat.feature_id">
-                                <div class="feature-toggle"
-                                     :class="{ enabled: feat.enabled, placed: feat.hole_placed }">
-                                    <div>
-                                        <div style="font-weight: 500;" x-text="feat.feature_name"></div>
-                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
-                                            <span x-text="feat.feature_id.replace('_', ' ')"></span>
+                                <div class="feature-item"
+                                     :class="{
+                                         'placed': feat.enabled && feat.hole_placed,
+                                         'needs-placement': feat.enabled && !feat.hole_placed,
+                                         'disabled': !feat.enabled
+                                     }">
+                                    <!-- Feature Header (always visible) -->
+                                    <div class="feature-header" @click="toggleFeatureExpand(feat.feature_id)">
+                                        <div class="flex items-center" style="flex: 1; min-width: 0;">
+                                            <div class="feature-status-indicator"
+                                                 :class="{
+                                                     'placed': feat.enabled && feat.hole_placed,
+                                                     'needs-placement': feat.enabled && !feat.hole_placed,
+                                                     'disabled': !feat.enabled
+                                                 }"></div>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-weight: 500; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                                     x-text="feat.feature_name"></div>
+                                                <div style="font-size: 0.65rem; color: var(--text-muted);"
+                                                     x-text="feat.feature_type.replace(/_/g, ' ')"></div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2" @click.stop>
+                                            <!-- Enable/Disable Checkbox -->
+                                            <label class="flex items-center gap-1" title="Enable this feature">
+                                                <input type="checkbox"
+                                                       :checked="feat.enabled"
+                                                       @change="toggleFeature(selectedComponent.id, feat.feature_id, $event.target.checked)"
+                                                       style="width: 16px; height: 16px; cursor: pointer;">
+                                            </label>
                                         </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <template x-if="feat.enabled && !feat.hole_placed">
-                                            <button class="btn btn-sm btn-warning" @click="placeHoleForFeature(feat)">
-                                                Place Hole
-                                            </button>
-                                        </template>
-                                        <template x-if="feat.hole_placed">
-                                            <span class="status-icon status-placed">✓</span>
-                                        </template>
-                                        <label class="toggle">
-                                            <input type="checkbox"
-                                                   :checked="feat.enabled"
-                                                   @change="toggleFeature(selectedComponent.id, feat.feature_id, $event.target.checked)">
-                                            <span class="toggle-slider"></span>
-                                        </label>
+
+                                    <!-- Feature Body (expandable) -->
+                                    <div class="feature-body" x-show="expandedFeature === feat.feature_id" x-collapse>
+                                        <!-- Feature Name (editable) -->
+                                        <div class="form-group" style="margin-bottom: 0.5rem;">
+                                            <label style="font-size: 0.65rem; color: var(--text-muted);">Display Name</label>
+                                            <input type="text"
+                                                   class="feature-name-input"
+                                                   :value="feat.feature_name"
+                                                   @blur="updateFeatureName(selectedComponent.id, feat.feature_id, $event.target.value)"
+                                                   @keydown.enter="$event.target.blur()">
+                                        </div>
+
+                                        <!-- Feature Info -->
+                                        <div class="feature-info">
+                                            <div>Face: <span x-text="feat.required_face || 'any'"></span></div>
+                                            <div>Size: <span x-text="(feat.hole_width_mm || 10) + ' x ' + (feat.hole_height_mm || 10) + ' mm'"></span>
+                                                <span x-show="feat.is_circular">(circular)</span>
+                                            </div>
+                                            <template x-if="feat.is_custom">
+                                                <div style="color: var(--primary);">Custom feature</div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Feature Actions -->
+                                        <div class="feature-actions">
+                                            <template x-if="feat.enabled && !feat.hole_placed">
+                                                <button class="btn btn-sm btn-warning" style="flex: 1;" @click="placeHoleForFeature(feat)">
+                                                    Place Hole
+                                                </button>
+                                            </template>
+                                            <template x-if="feat.enabled && feat.hole_placed">
+                                                <button class="btn btn-sm btn-success" style="flex: 1;" disabled>
+                                                    ✓ Hole Placed
+                                                </button>
+                                            </template>
+                                            <template x-if="!feat.enabled">
+                                                <button class="btn btn-sm btn-outline" style="flex: 1;" disabled>
+                                                    Enable to place hole
+                                                </button>
+                                            </template>
+                                            <template x-if="feat.is_custom">
+                                                <button class="btn btn-sm btn-danger" @click="removeCustomFeature(selectedComponent.id, feat.feature_id)" title="Remove">
+                                                    ×
+                                                </button>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
 
+                            <!-- No Features Message -->
                             <template x-if="selectedComponent.enabled_features.length === 0">
-                                <p style="color: var(--text-muted); font-size: 0.875rem;">
-                                    This component has no defined features.
-                                </p>
+                                <div style="text-align: center; padding: 1rem; color: var(--text-muted); font-size: 0.875rem;">
+                                    <p>No features defined for this component.</p>
+                                    <p style="font-size: 0.75rem;">Add custom features below.</p>
+                                </div>
                             </template>
+
+                            <!-- Add Custom Feature Button -->
+                            <button class="add-feature-btn" @click="showAddCustomFeature()">
+                                + Add Custom Feature
+                            </button>
                         </div>
                     </template>
                 </div>
@@ -835,6 +1049,75 @@
                         + Add Ventilation Zone
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Feature Modal -->
+    <div x-show="showCustomFeatureModal" x-cloak
+         style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="card" style="width: 400px; max-width: 90vw;">
+            <h3 style="margin-bottom: 1rem;">Add Custom Feature</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Add a custom feature that requires a hole in the enclosure.
+            </p>
+
+            <div class="form-group">
+                <label class="form-label">Feature Name *</label>
+                <input type="text" class="form-input" x-model="customFeatureForm.name"
+                       placeholder="e.g., Power Switch, Sensor Window">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Feature Type</label>
+                <select class="form-select" x-model="customFeatureForm.feature_type" style="width: 100%;">
+                    <option value="cable_entry">Cable Entry</option>
+                    <option value="button">Button</option>
+                    <option value="switch">Switch</option>
+                    <option value="led_indicator">LED Indicator</option>
+                    <option value="sensor_window">Sensor Window</option>
+                    <option value="display">Display</option>
+                    <option value="usb_port">USB Port</option>
+                    <option value="power_input">Power Input</option>
+                    <option value="audio_jack">Audio Jack</option>
+                    <option value="ventilation">Ventilation</option>
+                    <option value="mounting_hole">Mounting Hole</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Suggested Face</label>
+                <select class="form-select" x-model="customFeatureForm.face" style="width: 100%;">
+                    <option value="front">Front</option>
+                    <option value="back">Back</option>
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                    <option value="top">Top</option>
+                    <option value="bottom">Bottom</option>
+                </select>
+            </div>
+
+            <div class="grid grid-2" style="gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label">Hole Width (mm)</label>
+                    <input type="number" class="form-input" x-model.number="customFeatureForm.width" step="0.5" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hole Height (mm)</label>
+                    <input type="number" class="form-input" x-model.number="customFeatureForm.height" step="0.5" min="1">
+                </div>
+            </div>
+
+            <label class="flex items-center gap-2" style="margin-bottom: 1rem;">
+                <input type="checkbox" x-model="customFeatureForm.circular">
+                <span>Circular hole</span>
+            </label>
+
+            <div class="flex gap-2">
+                <button class="btn btn-primary" style="flex: 1;" @click="addCustomFeature()">
+                    Add Feature
+                </button>
+                <button class="btn btn-outline" @click="showCustomFeatureModal = false">Cancel</button>
             </div>
         </div>
     </div>
@@ -1054,6 +1337,18 @@ function projectEditor() {
         selectedHole: null,  // Currently selected hole for editing
         showHoleModal: false,
         showVentModal: false,
+        showCustomFeatureModal: false,  // Add custom feature modal
+        expandedFeature: null,  // Which feature is expanded in the list
+
+        // Custom feature form
+        customFeatureForm: {
+            name: '',
+            feature_type: 'cable_entry',
+            face: 'front',
+            width: 10,
+            height: 10,
+            circular: false
+        },
 
         // Hole placement state
         holePlacementMode: false,  // When true, click places hole
@@ -1162,6 +1457,104 @@ function projectEditor() {
                 }
             }
             return count;
+        },
+
+        // Helper functions for feature status
+        getEnabledCount(comp) {
+            return (comp.enabled_features || []).filter(f => f.enabled).length;
+        },
+
+        getEnabledUnplacedCount(comp) {
+            return (comp.enabled_features || []).filter(f => f.enabled && !f.hole_placed).length;
+        },
+
+        toggleFeatureExpand(featureId) {
+            this.expandedFeature = this.expandedFeature === featureId ? null : featureId;
+        },
+
+        async updateFeatureName(componentId, featureId, newName) {
+            // Update locally
+            const comp = this.projectComponents.find(c => c.id === componentId);
+            if (comp) {
+                const feat = comp.enabled_features.find(f => f.feature_id === featureId);
+                if (feat) {
+                    feat.feature_name = newName;
+                }
+            }
+
+            // Save to server
+            try {
+                await fetch(`/projects/api/${PROJECT_ID}/components/${componentId}/features/${featureId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ feature_name: newName })
+                });
+            } catch (e) {
+                console.error('Failed to update feature name:', e);
+            }
+
+            // Update canvas if hole is placed
+            this.redrawCanvas();
+        },
+
+        showAddCustomFeature() {
+            this.customFeatureForm = {
+                name: 'Custom Feature',
+                feature_type: 'cable_entry',
+                face: 'front',
+                width: 10,
+                height: 10,
+                circular: false
+            };
+            this.showCustomFeatureModal = true;
+        },
+
+        async addCustomFeature() {
+            if (!this.selectedComponent) return;
+
+            const componentId = this.selectedComponent.id;
+
+            try {
+                const response = await fetch(`/projects/api/${PROJECT_ID}/components/${componentId}/features`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        feature_name: this.customFeatureForm.name,
+                        feature_type: this.customFeatureForm.feature_type,
+                        required_face: this.customFeatureForm.face,
+                        hole_width_mm: this.customFeatureForm.width,
+                        hole_height_mm: this.customFeatureForm.height,
+                        is_circular: this.customFeatureForm.circular,
+                        is_custom: true
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Add to local state
+                    this.selectedComponent.enabled_features.push(data.feature);
+                    this.showCustomFeatureModal = false;
+                }
+            } catch (e) {
+                console.error('Failed to add custom feature:', e);
+            }
+        },
+
+        async removeCustomFeature(componentId, featureId) {
+            try {
+                const response = await fetch(`/projects/api/${PROJECT_ID}/components/${componentId}/features/${featureId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    const comp = this.projectComponents.find(c => c.id === componentId);
+                    if (comp) {
+                        comp.enabled_features = comp.enabled_features.filter(f => f.feature_id !== featureId);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to remove custom feature:', e);
+            }
         },
 
         init() {
@@ -2318,23 +2711,24 @@ function projectEditor() {
 
         placeHoleForFeature(feat) {
             // Use inline form instead of modal
+            // Pre-fill with feature's suggested values
             this.holeForm = {
                 show: true,
                 isEditing: false,
                 editingHoleId: null,
                 name: feat.feature_name,
-                face: 'front',
+                face: feat.required_face || 'front',
                 x: 10,
                 y: 10,
-                width: 10,
-                height: 10,
-                circular: false,
+                width: feat.hole_width_mm || 10,
+                height: feat.hole_height_mm || 10,
+                circular: feat.is_circular || false,
                 componentId: this.selectedComponent?.id,
                 featureId: feat.feature_id
             };
             this.rightTab = 'holes';
-            // Switch canvas to show front face for placement
-            this.currentFace = 'front';
+            // Switch canvas to show the feature's suggested face for placement
+            this.currentFace = feat.required_face || 'front';
             this.onFaceChange();
         },
 

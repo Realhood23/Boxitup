@@ -272,6 +272,110 @@ def api_update_features(project_id, component_instance_id):
     })
 
 
+@projects_bp.route('/api/<project_id>/components/<component_instance_id>/features/<feature_id>', methods=['PUT'])
+@login_required
+def api_update_single_feature(project_id, component_instance_id, feature_id):
+    """Update a single feature's properties (name, etc.)."""
+    from app.services.project_service import ProjectService
+    service = ProjectService()
+
+    project = service.get_project(project_id, current_user.id)
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    data = request.get_json()
+
+    for comp in project.components:
+        if comp.id == component_instance_id:
+            for feat in comp.enabled_features:
+                if feat.feature_id == feature_id:
+                    if 'feature_name' in data:
+                        feat.feature_name = data['feature_name']
+                    if 'enabled' in data:
+                        feat.enabled = data['enabled']
+                    break
+            break
+
+    service.save_project(project)
+
+    return jsonify({'success': True})
+
+
+@projects_bp.route('/api/<project_id>/components/<component_instance_id>/features', methods=['POST'])
+@login_required
+def api_add_custom_feature(project_id, component_instance_id):
+    """Add a custom feature to a component."""
+    from app.services.project_service import ProjectService
+    from app.models.project import EnabledFeature
+    import uuid
+    service = ProjectService()
+
+    project = service.get_project(project_id, current_user.id)
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    data = request.get_json()
+
+    for comp in project.components:
+        if comp.id == component_instance_id:
+            feature_id = f"custom_{uuid.uuid4().hex[:8]}"
+            new_feature = EnabledFeature(
+                feature_id=feature_id,
+                feature_type=data.get('feature_type', 'cable_entry'),
+                feature_name=data.get('feature_name', 'Custom Feature'),
+                original_name=data.get('feature_name', 'Custom Feature'),
+                enabled=True,  # Custom features start enabled
+                hole_placed=False,
+                is_custom=True,
+                hole_width_mm=data.get('hole_width_mm', 10.0),
+                hole_height_mm=data.get('hole_height_mm', 10.0),
+                is_circular=data.get('is_circular', False),
+                corner_radius_mm=data.get('corner_radius_mm', 0),
+                required_face=data.get('required_face', 'front'),
+                requires_external_access=True
+            )
+            comp.enabled_features.append(new_feature)
+
+            service.save_project(project)
+
+            return jsonify({
+                'success': True,
+                'feature': new_feature.to_dict()
+            })
+
+    return jsonify({'error': 'Component not found'}), 404
+
+
+@projects_bp.route('/api/<project_id>/components/<component_instance_id>/features/<feature_id>', methods=['DELETE'])
+@login_required
+def api_remove_custom_feature(project_id, component_instance_id, feature_id):
+    """Remove a custom feature from a component."""
+    from app.services.project_service import ProjectService
+    service = ProjectService()
+
+    project = service.get_project(project_id, current_user.id)
+    if not project:
+        return jsonify({'error': 'Project not found'}), 404
+
+    for comp in project.components:
+        if comp.id == component_instance_id:
+            # Only allow removing custom features
+            feat_to_remove = None
+            for feat in comp.enabled_features:
+                if feat.feature_id == feature_id and feat.is_custom:
+                    feat_to_remove = feat
+                    break
+
+            if feat_to_remove:
+                comp.enabled_features.remove(feat_to_remove)
+                service.save_project(project)
+                return jsonify({'success': True})
+            else:
+                return jsonify({'error': 'Feature not found or not removable'}), 404
+
+    return jsonify({'error': 'Component not found'}), 404
+
+
 @projects_bp.route('/api/<project_id>/enclosure', methods=['PUT'])
 @login_required
 def api_update_enclosure(project_id):

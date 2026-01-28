@@ -12,29 +12,58 @@ class EnabledFeature:
     A feature that the user has enabled for a component in their project.
     Tracks whether the required hole has been placed.
     """
-    feature_id: str                       # References ComponentFeature
-    feature_name: str                     # For display
-    enabled: bool = True                  # User can toggle on/off
+    feature_id: str                       # Unique ID for this feature instance
+    feature_type: str                     # Type from component (usb_port, button, etc.)
+    feature_name: str                     # User-editable display name
+    original_name: str                    # Original name from component definition
+    enabled: bool = True                  # User can toggle on/off (if off, no hole needed)
     hole_placed: bool = False             # Has the user placed this hole?
     hole_id: Optional[str] = None         # Reference to placed hole in enclosure
+    is_custom: bool = False               # True if user-added feature (not from component def)
+
+    # Feature dimensions and position (from component definition, or user-defined)
+    hole_width_mm: float = 10.0
+    hole_height_mm: float = 10.0
+    is_circular: bool = False
+    corner_radius_mm: float = 0
+    required_face: str = "front"
+    requires_external_access: bool = True
 
     def to_dict(self) -> dict:
         return {
             'feature_id': self.feature_id,
+            'feature_type': self.feature_type,
             'feature_name': self.feature_name,
+            'original_name': self.original_name,
             'enabled': self.enabled,
             'hole_placed': self.hole_placed,
-            'hole_id': self.hole_id
+            'hole_id': self.hole_id,
+            'is_custom': self.is_custom,
+            'hole_width_mm': self.hole_width_mm,
+            'hole_height_mm': self.hole_height_mm,
+            'is_circular': self.is_circular,
+            'corner_radius_mm': self.corner_radius_mm,
+            'required_face': self.required_face,
+            'requires_external_access': self.requires_external_access
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> 'EnabledFeature':
         return cls(
             feature_id=data['feature_id'],
+            feature_type=data.get('feature_type', data['feature_id']),  # Backwards compat
             feature_name=data['feature_name'],
+            original_name=data.get('original_name', data['feature_name']),
             enabled=data.get('enabled', True),
             hole_placed=data.get('hole_placed', False),
-            hole_id=data.get('hole_id')
+            hole_id=data.get('hole_id'),
+            is_custom=data.get('is_custom', False),
+            hole_width_mm=data.get('hole_width_mm', 10.0),
+            hole_height_mm=data.get('hole_height_mm', 10.0),
+            is_circular=data.get('is_circular', False),
+            corner_radius_mm=data.get('corner_radius_mm', 0),
+            required_face=data.get('required_face', 'front'),
+            requires_external_access=data.get('requires_external_access', True)
         )
 
 
@@ -212,12 +241,23 @@ class Project:
 
         # Initialize enabled features from component's features
         if features:
-            for feat in features:
+            for i, feat in enumerate(features):
+                # Create unique feature ID
+                feature_id = f"{component_id}_{feat.get('feature_type', 'feature')}_{i}"
                 ef = EnabledFeature(
-                    feature_id=feat.get('feature_type', ''),
-                    feature_name=feat.get('name', ''),
-                    enabled=feat.get('requires_external_access', True),
-                    hole_placed=False
+                    feature_id=feature_id,
+                    feature_type=feat.get('feature_type', 'unknown'),
+                    feature_name=feat.get('name', 'Feature'),
+                    original_name=feat.get('name', 'Feature'),
+                    enabled=False,  # Start disabled - user enables what they need
+                    hole_placed=False,
+                    is_custom=False,
+                    hole_width_mm=feat.get('hole_width_mm', 10.0),
+                    hole_height_mm=feat.get('hole_height_mm', 10.0),
+                    is_circular=feat.get('is_circular', False),
+                    corner_radius_mm=feat.get('corner_radius_mm', 0),
+                    required_face=feat.get('required_face', 'front'),
+                    requires_external_access=feat.get('requires_external_access', True)
                 )
                 pc.enabled_features.append(ef)
 
