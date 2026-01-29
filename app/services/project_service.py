@@ -5,6 +5,7 @@ from typing import Optional
 from flask import current_app
 
 from app.models.project import Project
+from app.models.enclosure import Enclosure
 
 
 class ProjectService:
@@ -37,12 +38,20 @@ class ProjectService:
         return os.path.join(self._get_user_dir(user_id), f'{project_id}.json')
 
     def create_project(self, name: str, description: str, user_id: str) -> Project:
-        """Create a new project."""
+        """Create a new project with default enclosure configuration."""
+        # Create default enclosure config
+        default_enclosure = Enclosure(
+            inner_length_mm=100,
+            inner_width_mm=60,
+            inner_height_mm=30
+        )
+
         project = Project(
             id='',  # Will be auto-generated
             name=name,
             description=description,
-            user_id=user_id
+            user_id=user_id,
+            enclosure_config=default_enclosure.to_dict()
         )
 
         self.save_project(project)

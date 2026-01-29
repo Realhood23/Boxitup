@@ -388,7 +388,39 @@ def api_update_enclosure(project_id):
         return jsonify({'error': 'Project not found'}), 404
 
     data = request.get_json()
-    project.enclosure_config = data
+
+    # Get existing enclosure or create new one
+    if project.enclosure_config:
+        enclosure = Enclosure.from_dict(project.enclosure_config)
+    else:
+        enclosure = Enclosure(
+            inner_length_mm=100,
+            inner_width_mm=60,
+            inner_height_mm=30
+        )
+
+    # Update from the incoming data
+    if 'dimensions' in data:
+        dims = data['dimensions']
+        enclosure.inner_length_mm = dims.get('inner_length_mm', enclosure.inner_length_mm)
+        enclosure.inner_width_mm = dims.get('inner_width_mm', enclosure.inner_width_mm)
+        enclosure.inner_height_mm = dims.get('inner_height_mm', enclosure.inner_height_mm)
+
+    if 'wall_thickness_mm' in data:
+        enclosure.wall_thickness_mm = data['wall_thickness_mm']
+    if 'bottom_thickness_mm' in data:
+        enclosure.bottom_thickness_mm = data['bottom_thickness_mm']
+    if 'corner_radius_mm' in data:
+        enclosure.corner_radius_mm = data['corner_radius_mm']
+    if 'shape' in data:
+        enclosure.shape = EnclosureShape(data['shape'])
+    if 'lid' in data:
+        lid = data['lid']
+        if 'type' in lid:
+            enclosure.lid_type = LidType(lid['type'])
+
+    # Save the properly structured enclosure config
+    project.enclosure_config = enclosure.to_dict()
     service.save_project(project)
 
     return jsonify({'success': True})

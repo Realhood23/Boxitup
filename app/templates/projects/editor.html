@@ -533,9 +533,10 @@
             <button class="btn btn-outline btn-sm" @click="autoSuggestHoles()" :disabled="unplacedCount === 0">
                 Auto-Suggest Holes
             </button>
-            <a href="{{ url_for('generator.preview', project_id=project.id) }}"
+            <a :href="(unplacedCount > 0 || projectComponents.length === 0) ? 'javascript:void(0)' : '{{ url_for('generator.preview', project_id=project.id) }}'"
                class="btn btn-primary btn-sm"
-               :class="{ 'disabled': unplacedCount > 0 || projectComponents.length === 0 }">
+               :class="{ 'disabled': unplacedCount > 0 || projectComponents.length === 0 }"
+               @click="(unplacedCount > 0 || projectComponents.length === 0) && $event.preventDefault()">
                 Generate OpenSCAD
             </a>
         </div>
